@@ -1,0 +1,5 @@
+<a class="subscribe icon-feed" href="{blogUrl}/rss.xml"><span class="tooltip">Subscribe!</span></a>
+<div class="inner">
+   <section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section>
+   <section class="poweredby">Built in a <a href="http://github.com/joakimbeng/jiffy">jiffy</a> with a <a class="icon-ghost" href="http://ghost.org">Ghost</a> theme</section>
+</div>

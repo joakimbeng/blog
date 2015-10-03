@@ -1,0 +1,30 @@
+{>"layouts/default"/}
+
+{<title}{post.name} - {/title}
+
+{<bodyClass}post-template{/bodyClass}
+
+{<bodyHeader}{/bodyHeader}
+
+{<body}
+  {#post}
+  <article class="post">
+    <header class="post-header">
+      <a id="blog-logo" href="{path}">
+        <h1 class="blog-title">{blogTitle}</h1>
+      </a>
+    </header>
+    {>"partials/post-meta"/}
+    <h1 class="post-title">{name}</h1>
+    <section class="post-content">
+      {content|s}
+    </section>
+    <footer class="post-footer">
+      {>"partials/post-footer"/}
+    </footer>
+    {?disqusShortname}
+      {>"partials/post-comments"/}
+    {/disqusShortname}
+  </article>
+  {/post}
+{/body}

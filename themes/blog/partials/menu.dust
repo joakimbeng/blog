@@ -1,0 +1,14 @@
+<div class="navbar navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <nav class="nav-collapse">
+        <ul class="nav">
+          <li{^currentUrl} class="active"{/currentUrl}><a href="{path}index.html">Home</a></li>
+          {#categories}
+          <li{@if cond="'{category.url}' == '{currentUrl}'"} class="active"{/if}><a href="{path}{category.url}">{category.name}</a></li>
+          {/categories}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>

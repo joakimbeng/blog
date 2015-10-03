@@ -1,0 +1,4 @@
+<span class="post-meta">
+  <time datetime="{date}">{@formatDate date="{datetime}" format="DD MMM YYYY" lan="en-US"/}</time>
+  &nbsp;on {#tags}<a class="tag" href="{path}{url}">{name}</a>{@sep}, {/sep}{/tags}
+</span>

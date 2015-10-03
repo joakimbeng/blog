@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[joakimbeng]]></title><description><![CDATA[Let&#39;s code a better tomorrow...]]></description><link>http://joakim.beng.se/blog</link><generator>Jiffy RSS generator</generator><lastBuildDate>Fri, 02 Oct 2015 18:19:08 GMT</lastBuildDate><atom:link href="http://joakim.beng.se/blog/rss.xml" rel="self" type="application/rss+xml"/><author><![CDATA[Joakim Carlstein]]></author><ttl>60</ttl><item><title><![CDATA[A JavaScript test runner in 20 lines]]></title><description><![CDATA[<p>A few weeks ago I saw <a href="https://twitter.com/snuggsi/status/565531862895169536">this tweet about the world&#39;s smallest test library</a> by <a href="https://twitter.com/snuggsi">@snuggsi</a>, which is a great little snippet! Though I see it more as the world&#39;s smallest assertion library, so I&#39;ve decided to do a follow up on my previous post about <a href="/a-javascript-router-in-20-lines/">A JavaScript router in 20 lines</a> and now make a simple test runner in about the same amount of code.</p>
+<h2 id="creating-a-test-runner">Creating a test runner</h2>
+<h3 id="must-haves">Must haves</h3>
+<p>When I think of a test runner there are a few things it must have IMO, mainly:</p>
+<ul>
+<li>The ability to add multiple tests</li>
+<li>Be able to run all tests</li>
+<li>Catch unexpected errors, <em>think syntax errors</em></li>
+<li>Catch errors thrown by an assertion library</li>
+<li>Tell if everything went fine or not, and provide a stack trace if it didn&#39;t</li>
+</ul>
+<p>Also when writing unit tests in JavaScript I want the test runner to be <em>able to test asynchronous code</em>.</p>
+<h3 id="some-code-please-">Some code please...</h3>
+<p>First we&#39;ll need somewhere to store all tests to run, i.e. the test queue, a simple array will do:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> tests = [];
+</code></pre>
+<p>Then we must have a way to add tests to that queue. I usually use and like <a href="http://mochajs.org/">Mocha</a> with the BDD syntax, which looks like this:</p>
+<pre><code class="lang-javascript">describe(<span class="string">'thing to test'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+  it(<span class="string">'fulfills something...'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+    <span class="comment">// test code...</span>
+  });
+});
+</code></pre>
+<p>So let&#39;s make a simplified version of that:</p>
+<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">test</span> <span class="params">(name, cb)</span> {</span>
+    tests.push({name: name, test: cb});
+}
+
+<span class="comment">// Usage example:</span>
+test(<span class="string">'thing to test fulfills something...'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+  <span class="comment">// test code...</span>
+});
+</code></pre>
+<p>Simple enough :)</p>
+<h4 id="syntax-for-asynchronous-tests">Syntax for asynchronous tests</h4>
+<p>How about asynchronous tests then? Once again I&#39;ll take inspiration from the Mocha framework, which uses <code>done</code> callbacks in the tests to execute when your test is done.</p>
+<p>With that change our usage example now looks like:</p>
+<pre><code class="lang-javascript">test(<span class="string">'thing to test fulfills something...'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(done)</span> {</span>
+  doSomethingAsync(<span class="function"><span class="keyword">function</span> <span class="params">(result)</span> {</span>
+    <span class="comment">// assertions...</span>
+    done();
+  });
+});
+</code></pre>
+<p>Looking good!</p>
+<h3 id="running-tests">Running tests</h3>
+<p>Let&#39;s add a simple test, which we will run in the next step (<strong>note</strong> I&#39;ll use the small assertion library from the tweet mentioned in the beginning of the post):</p>
+<pre><code class="lang-javascript">test(<span class="string">'1+1 equals 2'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(done)</span> {</span>
+  assert(<span class="number">1</span> + <span class="number">1</span> === <span class="number">2</span>, <span class="string">'1+1 should be 2'</span>);
+  done();
+});
+</code></pre>
+<p>If we want to run just this one test, we could do something like:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> testToRun = tests[<span class="number">0</span>];
+<span class="keyword">try</span> {
+  testToRun.test(done);
+} <span class="keyword">catch</span> (err) {
+  done(err);
+}
+<span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
+  <span class="keyword">if</span> (err) {
+    console.error(<span class="string">'Test failed!'</span>);
+  } <span class="keyword">else</span> {
+    console.log(<span class="string">'Test succeeded!'</span>);
+  }
+}
+</code></pre>
+<p>When we run this in <a href="http://nodejs.org">Node</a> or in the browser a nice <code>&quot;Test succeeded!&quot;</code> should show up in the console.</p>
+<h4 id="running-all-tests">Running all tests</h4>
+<p>Let&#39;s wrap that up in a function and make it get the next test from the queue, each time it&#39;s executed:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> i = <span class="number">0</span>;
+<span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
+  <span class="keyword">var</span> testToRun = tests[i++];
+  <span class="keyword">try</span> {
+    testToRun.test(done);
+  } <span class="keyword">catch</span> (err) {
+    done(err);
+  }
+  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
+    <span class="keyword">if</span> (err) {
+      console.error(<span class="string">'Test failed!'</span>);
+    } <span class="keyword">else</span> {
+      console.log(<span class="string">'Test succeeded!'</span>);
+    }
+  }
+}
+</code></pre>
+<p>A little better, but still not useful, we don&#39;t want to manually run the runner once for each test don&#39;t we?</p>
+<p>A useful little trick here, inspired by the middleware queue in <a href="http://expressjs.com/">Express</a>, is to wrap the test picking and execution in a function called <code>next</code> which will be passed as the <code>done</code> callback to all tests until there are no tests left. Like this:</p>
+<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
+  <span class="keyword">var</span> i = <span class="number">0</span>; <span class="comment">// Move this in here, so it resets on each run...</span>
+  next(); <span class="comment">// Start runner...</span>
+  <span class="function"><span class="keyword">function</span> <span class="title">next</span> <span class="params">(err)</span> {</span>
+    <span class="keyword">var</span> testToRun = tests[i++];
+    <span class="comment">// Stop test runner on error or when no tests are left:</span>
+    <span class="keyword">if</span> (err || !testToRun) <span class="keyword">return</span> done(err);
+    <span class="keyword">try</span> {
+      testToRun.test(next);
+    } <span class="keyword">catch</span> (err) {
+      next(err);
+    }
+  }
+  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
+    <span class="keyword">if</span> (err) {
+      console.error(<span class="string">'Tests failed!'</span>);
+    } <span class="keyword">else</span> {
+      console.log(<span class="string">'Tests succeeded!'</span>);
+    }
+  }
+}
+</code></pre>
+<p>That&#39;s better! Now at least all tests will be run, by calling <code>run()</code> just once.</p>
+<h3 id="it-s-all-about-presentation">It&#39;s all about presentation</h3>
+<p>This test runner works, but it does not give you any information of what succeeded and what failed. We need to fix that:</p>
+<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
+  <span class="keyword">var</span> i = <span class="number">0</span>;
+  <span class="keyword">var</span> testToRun; <span class="comment">// Move this here, to get info about last test later...</span>
+  next(); <span class="comment">// Start runner...</span>
+  <span class="function"><span class="keyword">function</span> <span class="title">next</span> <span class="params">(err)</span> {</span>
+    <span class="keyword">if</span> (testToRun) {
+      <span class="comment">// Show status for last test run:</span>
+      <span class="keyword">if</span> (err) {
+        console.error(<span class="string">'✘ '</span> + testToRun.name);
+      } <span class="keyword">else</span> {
+        console.log(<span class="string">'✔ '</span> + testToRun.name);
+      }
+    }
+    testToRun = tests[i++];
+    <span class="comment">// Stop test runner on error or when no tests are left:</span>
+    <span class="keyword">if</span> (err || !testToRun) <span class="keyword">return</span> done(err);
+    <span class="keyword">try</span> {
+      <span class="comment">// Calling `call` makes a better stack trace:</span>
+      testToRun.test.call(testToRun.test, next);
+    } <span class="keyword">catch</span> (err) {
+      next(err);
+    }
+  }
+  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
+      <span class="comment">// Show all remaining tests as skipped:</span>
+    tests.slice(i).map(<span class="function"><span class="keyword">function</span> <span class="params">(skippedTest)</span> {</span> console.log(<span class="string">'-'</span>, skippedTest.name); });
+    <span class="keyword">if</span> (err) {
+      console.error(<span class="string">'\nTests failed!\n'</span> + err.stack); <span class="comment">// Add stack trace to output...</span>
+    } <span class="keyword">else</span> {
+      console.log(<span class="string">'\nTests succeeded!'</span>);
+    }
+  }
+}
+</code></pre>
+<p>That&#39;s more like it!</p>
+<p>But, there is still one problem. I said <em>20 lines of code</em>, and this is a total of 36 including comments, so there&#39;s still some refactoring that can be done.</p>
+<h3 id="wrapping-it-up">Wrapping it up</h3>
+<p>Let&#39;s save some lines by removing all comments and refactor some bits and pieces to oneliners, like so:</p>
+<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
+  <span class="keyword">var</span> i = <span class="number">0</span>, testToRun;
+  (<span class="function"><span class="keyword">function</span> <span class="title">next</span> <span class="params">(err)</span> {</span>
+    <span class="keyword">if</span> (testToRun) console[err ? <span class="string">'error'</span> : <span class="string">'log'</span>](err ? <span class="string">'✘'</span> : <span class="string">'✔'</span>, testToRun.name);
+    <span class="keyword">if</span> (err || !(testToRun = tests[i++])) <span class="keyword">return</span> done(err);
+    <span class="keyword">try</span> {
+      testToRun.test.call(testToRun.test, next);
+    } <span class="keyword">catch</span> (err) {
+      next(err);
+    }
+  })();
+  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
+    tests.slice(i).map(<span class="function"><span class="keyword">function</span> <span class="params">(skippedTest)</span> {</span> console.log(<span class="string">'-'</span>, skippedTest.name); });
+    console[err ? <span class="string">'error'</span> : <span class="string">'log'</span>](<span class="string">'\nTests '</span> + (err ? <span class="string">'failed!\n'</span> + err.stack : <span class="string">'succeeded!'</span>));
+  }
+}
+</code></pre>
+<p>Including the <code>tests</code> array declaration and the <code>test</code> function, for adding tests, it sums up to <strong>20 lines!</strong> How about that :)</p>
+<p>Finally <a href="https://gist.github.com/joakimbeng/8f57dae814a4802e2ae6">here&#39;s a gist with the complete version</a> including a basic module wrapper and a runnable usage example.</p>
+<p>All the best!</p>
+]]></description><link>http://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html</link><guid isPermaLink="false">53fe24e3-00ef-4115-b1e9-400019122880</guid><dc:creator><![CDATA[Joakim Carlstein]]></dc:creator><pubDate>Mon, 23 Feb 2015 21:52:08 GMT</pubDate></item><item><title><![CDATA[Slush - replacing Yeoman with Gulp]]></title><description><![CDATA[<p>When I first came across <a href="http://gruntjs.com">Grunt</a> I thought it was a great tool, and it certainly was! Until I started to develop and maintain some grunt plugins of my own. Then I felt that the API was not intuitive enough for a smooth development cycle.
+It got even worse when I began maintaining my own huge gruntfile in my <a href="http://yeoman.io">Yeoman</a> MEAN app generator (<a href="http://github.com/klei/generator-klei">generator-klei</a>).</p>
+<h2 id="gulp-to-the-rescue">Gulp to the rescue</h2>
+<p>Then came <a href="http://gulpjs.com">Gulp</a> and I instantly felt that it was not only a great tool, but even a superb one! I really like the &quot;code before configuration&quot; mantra and even more so the advocacy of DRYness when developing plugins.</p>
+<h3 id="easier-to-maintain">Easier to maintain</h3>
+<p>The gulp version of my <code>generator-klei</code> is under development (take a look at the <a href="https://github.com/klei/generator-klei/tree/gulp">gulp branch</a> if you&#39;re intrested) and I&#39;ve gone from 600 lines of gruntfile to a 300 lines long gulpfile with maintained functionality!</p>
+<h2 id="back-to-the-point">Back to the point</h2>
+<p>When developing the Yeoman generator I discovered it wasn&#39;t only the gruntfile that was hard to maintain, but also the generator itself. So a couple of weeks ago I began thinking of how to replace Yeoman with something simpler.</p>
+<h3 id="main-features-of-a-generator">Main features of a generator</h3>
+<p>First I listed all the features of a Yeoman generator, the features that I&#39;m using anyway:</p>
+<ol>
+<li>Copying a project structure (with folders and everything)</li>
+<li>Prompting the user for some project options</li>
+<li>Templating some of the project files depending on the prompt answers</li>
+<li>Auto-installing needed dependencies for the generated project</li>
+<li>Prompting which files to overwrite (when running the generator a second time)</li>
+</ol>
+<h3 id="gulp-as-a-generator">Gulp as a generator</h3>
+<p>So I thought, wouldn&#39;t this be a great use for gulp?</p>
+<p>Let&#39;s see what it handles out of the box:</p>
+<ol>
+<li>Supported natively by <a href="https://github.com/gulpjs/gulp/blob/master/docs/API.md#gulpsrcglobs-options"><code>gulp.src</code></a></li>
+<li>One could use <a href="https://github.com/SBoudrias/Inquirer.js"><code>inquirer</code></a> directly for this</li>
+<li>For instance <a href="https://github.com/sindresorhus/gulp-template"><code>gulp-template</code></a> does this</li>
+<li>Missing. Could easily be implemented as a gulp plugin <em>(see below)</em></li>
+<li>Missing. Could easily be implemented as a gulp plugin <em>(see below)</em></li>
+</ol>
+<p>As you see, gulp can already act as a simple project generator!</p>
+<h4 id="a-basic-gulp-project-scaffolding-example">A basic Gulp project scaffolding example</h4>
+<p>Let&#39;s say we have a directory structure for our first simple generator like this:</p>
+<pre><code>my-basic-generator/
+├── app
+│   └── templates           <span class="preprocessor"># This contains the app template</span>
+│       ├── gulpfile<span class="variable">.js</span>
+│       ├── index<span class="variable">.html</span>
+│       └── package<span class="variable">.json</span>
+├── generator-gulpfile<span class="variable">.js</span>
+└── package<span class="variable">.json</span>
+</code></pre><p>Then we&#39;ll create a gulpfile made for scaffolding purposes, <code>generator-gulpfile.js</code>:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> gulp = require(<span class="string">'gulp'</span>),
+    template = require(<span class="string">'gulp-template'</span>);
+
+gulp.task(<span class="string">'default'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+  <span class="keyword">return</span> gulp.src(__dirname + <span class="string">'/app/templates/**'</span>) <span class="comment">// Notice the `__dirname` here</span>
+    .pipe(template({})) <span class="comment">// Empty data for now</span>
+    .pipe(gulp.dest(<span class="string">'./'</span>)); <span class="comment">// Relative to cwd</span>
+});
+</code></pre>
+<p>We can then scaffold our project into current working directory like this:</p>
+<pre><code class="lang-bash">/path/to/my-basic-generator/node_modules/.bin/gulp --gulpfile /path/to/my-basic-generator/generator-gulpfile.js --cwd .
+</code></pre>
+<p>Alright! As you can see, there&#39;s a lot we can do with Gulp already, but it&#39;s not that convenient yet - let&#39;s change that!</p>
+<h2 id="introducing-slush-the-streaming-scaffolding-system">Introducing Slush - the streaming scaffolding system</h2>
+<p>To make it easier to use a project generator built with Gulp I&#39;ve built <a href="http://slushjs.github.io/generators">Slush</a>. Slush locates all installed Gulp built project generators, from now on called &quot;slush generators&quot;, and makes it possible to run such a generator without the need to specify it&#39;s location, like this:</p>
+<pre><code class="lang-bash">slush &lt;generator name&gt; [&lt;generator task&gt;]
+</code></pre>
+<p>Slush can, and should be, installed globally with:</p>
+<pre><code class="lang-bash">npm install -g slush
+</code></pre>
+<h3 id="slush-generators">Slush generators</h3>
+<p>Slush itself does not depend on Gulp but each generator must have Gulp as a dependency for this to work, Slush will run the Gulp module local to the generator.</p>
+<p>A slush generator should have the <code>&quot;slushgenerator&quot;</code> keyword in its <code>package.json</code> and should be named <code>slush-&lt;generator-name-dashed&gt;</code>, e.g. &quot;slush-angular&quot;.</p>
+<p>To make a slush generator locatable for the Slush CLI it must be installed globally, e.g:</p>
+<pre><code class="lang-bash">npm install -g slush-angular
+</code></pre>
+<h3 id="the-slushfile">The slushfile</h3>
+<p>To distinguish between the scaffolding gulpfile and an ordinary gulpfile used for development the former should be named <code>slushfile.js</code>. There&#39;s no difference between an ordinary gulpfile and the slushfile in how you write it, but only how you use it.</p>
+<p>All gulp plugins used within a generator&#39;s slushfile must be installed as ordinary project dependencies, i.e. <em>not</em> <code>devDependencies</code>.</p>
+<h3 id="making-a-complete-yeoman-like-slush-generator">Making a complete Yeoman like Slush generator</h3>
+<p>As you may remember I earlier in the post listed some features of a Yeoman generator that was not currently available natively in gulp or via plugins, which was:</p>
+<ul>
+<li>Auto-installing needed dependencies for the generated project</li>
+<li>Prompting which files to overwrite (when running the generator a second time)</li>
+</ul>
+<p>So I decided to build two gulp plugins to handle this.</p>
+<h4 id="install-project-dependencies-with-gulp-install-https-github-com-slushjs-gulp-install-">Install project dependencies with <a href="https://github.com/slushjs/gulp-install"><code>gulp-install</code></a></h4>
+<p>If the file stream contains a <code>package.json</code> file the plugin will trigger a call to <code>npm install</code> in the scaffolded project, and similar if it contains a <code>bower.json</code> file it will run <code>bower install</code>.</p>
+<h4 id="prompt-before-overwrite-with-gulp-conflict-https-github-com-slushjs-gulp-conflict-">Prompt before overwrite with <a href="https://github.com/slushjs/gulp-conflict"><code>gulp-conflict</code></a></h4>
+<p>Based on <a href="https://github.com/yeoman/generator/blob/master/lib/util/conflicter.js">Yeoman&#39;s internal conflicter</a> the <code>gulp-conflict</code> plugin will prompt what to do when files in stream is conflicting with files in the given destination directory.</p>
+<h3 id="a-complete-slush-generator-example">A complete Slush generator example</h3>
+<p>Let&#39;s revisit the basic gulp generator example from above and make it a complete slush generator with prompt, autoinstall and everything.</p>
+<p>We still have the same directory structure:</p>
+<pre><code>slush-basic/                <span class="preprocessor"># By convention</span>
+├── app
+│   └── templates           <span class="preprocessor"># This contains the app template</span>
+│       ├── gulpfile<span class="variable">.js</span>
+│       ├── index<span class="variable">.html</span>
+│       └── package<span class="variable">.json</span>
+├── slushfile<span class="variable">.js</span>            <span class="preprocessor"># By convention</span>
+└── package<span class="variable">.json</span>
+</code></pre><p>And here&#39;s the content of our <code>slushfile.js</code>:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> gulp = require(<span class="string">'gulp'</span>),
+    install = require(<span class="string">'gulp-install'</span>),
+    conflict = require(<span class="string">'gulp-conflict'</span>),
+    template = require(<span class="string">'gulp-template'</span>),
+    inquirer = require(<span class="string">'inquirer'</span>);
+
+gulp.task(<span class="string">'default'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(done)</span> {</span>
+  inquirer.prompt([
+    {type: <span class="string">'input'</span>, name: <span class="string">'name'</span>, message: <span class="string">'Name for the app?'</span>}
+  ],
+  <span class="function"><span class="keyword">function</span> <span class="params">(answers)</span> {</span>
+    gulp.src(__dirname + <span class="string">'/app/templates/**'</span>) <span class="comment">// Relative to __dirname</span>
+      .pipe(template(answers))
+      .pipe(conflict(<span class="string">'./'</span>))
+      .pipe(gulp.dest(<span class="string">'./'</span>)) <span class="comment">// Relative to cwd</span>
+      .pipe(install())
+      .on(<span class="string">'finish'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+        done(); <span class="comment">// Finished!</span>
+      });
+  });
+});
+</code></pre>
+<p><strong>There you have it!</strong> We can then install our new generator with:</p>
+<pre><code class="lang-bash">npm install -g slush-basic   <span class="comment"># if it's published</span>
+<span class="comment"># or</span>
+npm link .                   <span class="comment"># for development</span>
+</code></pre>
+<p>And use it with:</p>
+<pre><code class="lang-bash">slush basic
+</code></pre>
+<p><strong>Done!</strong> As you can see, with just a few lines of gulp goodness we have recreated the functionality of a Yeoman generator.</p>
+<h2 id="final-words">Final words</h2>
+<p>This is just the first version of Slush and I&#39;ve probably missed something useful in the whole Yeoman generator workflow, please feel free to comment and contribute!</p>
+<h3 id="build-generators">Build generators</h3>
+<p>I would like to see as many useful generators out there as possible. I know I&#39;ll be using this instead of Yeoman from now on anyway...</p>
+<h3 id="it-s-gulp">It&#39;s Gulp</h3>
+<p>Also remember that Slush comes with no functionality of its own, the only thing it provides is a convention and convenience of running global gulpfiles (in this case slushfiles) with the purpose of scaffolding projects, or anything else useful for that matter. So if something is missing it should probably be implemented as a gulp plugin.</p>
+]]></description><link>http://joakim.beng.se/blog/posts/slush-replacing-yeoman-with-gulp.html</link><guid isPermaLink="false">ebf8e11f-e6ba-476d-9213-d84a62ab35b1</guid><dc:creator><![CDATA[Joakim Carlstein]]></dc:creator><pubDate>Mon, 24 Mar 2014 15:27:21 GMT</pubDate></item><item><title><![CDATA[A JavaScript router in 20 lines]]></title><description><![CDATA[<p>Last week I found this post about <a href="http://krasimirtsonev.com/blog/article/Javascript-template-engine-in-just-20-line">writing a template engine in 20 lines</a>, which in turn is inspired by <a href="http://ejohn.org/blog/javascript-micro-templating/">John Resig&#39;s post on the same topic</a>. I find them really simple, interesting and inspiring so I came up with the idea of making a <em>simple client side router in just 20 lines of code</em>.</p>
+<h2 id="let-s-build-a-router">Let&#39;s build a router</h2>
+<p>First we&#39;ll need a html template:</p>
+<pre><code class="lang-html"><span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">html</span>&gt;</span>
+<span class="tag">&lt;<span class="title">head</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">title</span>&gt;</span>Building a router<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">
+    <span class="comment">// Put John's template engine code here...</span>
+  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
+<span class="tag">&lt;<span class="title">body</span>&gt;</span>
+
+<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+</code></pre>
+<p>For the templates I&#39;ll use <code>&lt;script&gt;</code> tags with <code>type=&quot;text/html&quot;</code>, which will make the browser not parse the contents of them, like we want it. I place them right after the existing script tag.</p>
+<pre><code class="lang-html"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/html"</span> <span class="attribute">id</span>=<span class="value">"home"</span>&gt;</span><span class="javascript">
+  &lt;h1&gt;Router FTW!<span class="xml"><span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
+</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/html"</span> <span class="attribute">id</span>=<span class="value">"template1"</span>&gt;</span><span class="javascript">
+  &lt;h1&gt;Page <span class="number">1</span>: <span class="xml"><span class="vbscript">&lt;%= greeting %&gt;</span><span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="vbscript">&lt;%= moreText %&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span>
+</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/html"</span> <span class="attribute">id</span>=<span class="value">"template2"</span>&gt;</span><span class="javascript">
+  &lt;h1&gt;Page <span class="number">2</span>: <span class="xml"><span class="vbscript">&lt;%= heading %&gt;</span><span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">p</span>&gt;</span>Lorem ipsum...<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
+</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+</code></pre>
+<p>As you can see they are really basic, that&#39;s because we are focusing on the router part...</p>
+<h3 id="hash-url-s">Hash URL&#39;s</h3>
+<p>For this router I&#39;ll use hash URL&#39;s, i.e. those specified after the <code>#</code> sign in the full URL e.g. <a href="http://example.com/#**/our/url/here**">http://example.com/#**/our/url/here**</a>. I could have done it with the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history">HTML5 History API</a> but I&#39;ll leave that for another time.</p>
+<h3 id="handling-route-changes">Handling route changes</h3>
+<p>The router will use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window.onhashchange">onhashchange event</a> to handle route changes after page load and the usual <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window.onload">onload event</a> to handle any route in the url on page load.</p>
+<h3 id="first-take-">First take...</h3>
+<p>Let&#39;s begin with making the route registering function:</p>
+<pre><code class="lang-javascript"><span class="comment">// A hash to store our routes:</span>
+<span class="keyword">var</span> routes = {};
+<span class="comment">// The route registering function:</span>
+<span class="function"><span class="keyword">function</span> <span class="title">route</span> <span class="params">(path, templateId, controller)</span> {</span>
+  routes[path] = {templateId: templateId, controller: controller};
+}
+</code></pre>
+<h4 id="registering-routes">Registering routes</h4>
+<p>Now we can create new routes yay! <em>Notice that I&#39;m mimicing the controller definition from AngularJS</em>:</p>
+<pre><code class="lang-javascript">route(<span class="string">'/'</span>, <span class="string">'home'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>});
+route(<span class="string">'/page1'</span>, <span class="string">'template1'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+    <span class="keyword">this</span>.greeting = <span class="string">'Hello world!'</span>;
+    <span class="keyword">this</span>.moreText = <span class="string">'Bacon ipsum...'</span>;
+});
+route(<span class="string">'/page2'</span>, <span class="string">'template2'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+    <span class="keyword">this</span>.heading = <span class="string">'I\'m page two!'</span>;
+});
+</code></pre>
+<p>But yet nothing happens, because we don&#39;t handle the routes yet...</p>
+<h4 id="the-actual-route-handler">The actual route handler</h4>
+<p>Let&#39;s build the route handler! But first we need somewhere to render our pages, for now I settle with the convention that an element with id <code>view</code> is used as the container to render a page in.</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> el = <span class="literal">null</span>;
+<span class="function"><span class="keyword">function</span> <span class="title">router</span> <span class="params">()</span> {</span>
+    <span class="comment">// Lazy load view element:</span>
+    el = el || document.getElementById(<span class="string">'view'</span>);
+    <span class="comment">// Current route url (getting rid of '#' in hash as well):</span>
+    <span class="keyword">var</span> url = location.hash.slice(<span class="number">1</span>) || <span class="string">'/'</span>;
+    <span class="comment">// Get route by url:</span>
+    <span class="keyword">var</span> route = routes[url];
+    <span class="comment">// Do we have both a view and a route?</span>
+    <span class="keyword">if</span> (el &amp;&amp; route.controller) {
+        <span class="comment">// Render route template with John Resig's template engine:</span>
+        el.innerHTML = tmpl(route.templateId, <span class="keyword">new</span> route.controller());
+    }
+}
+<span class="comment">// Listen on hash change:</span>
+window.addEventListener(<span class="string">'hashchange'</span>, router);
+<span class="comment">// Listen on page load:</span>
+window.addEventListener(<span class="string">'load'</span>, router);
+</code></pre>
+<p>There we have it! So let&#39;s test it!</p>
+<h3 id="testing-the-first-version">Testing the first version</h3>
+<p>First we&#39;ll add some navigational links to our layout, to be able to trigger the different routes, and the view element, by putting this inside our body element:</p>
+<pre><code class="lang-html">  <span class="tag">&lt;<span class="title">ul</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span> <span class="attribute">href</span>=<span class="value">"#"</span>&gt;</span>Home<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span> <span class="attribute">href</span>=<span class="value">"#/page1"</span>&gt;</span>Page 1<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span> <span class="attribute">href</span>=<span class="value">"#/page2"</span>&gt;</span>Page 2<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span>
+  <span class="tag">&lt;/<span class="title">ul</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"view"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span>
+</code></pre>
+<p><a href="https://gist.github.com/joakimbeng/7918297/278619bd5ba9b4768eecb0020b09a43f2e8eacea">The complete first version can be found here</a>.</p>
+<p>Save and open your complete html file in a modern browser and you should see:</p>
+<blockquote>
+<p>Router FTW!</p>
+</blockquote>
+<p>And the navigational links should work as well. You can also try to go to a specific route directly by navigating your browser to e.g. &quot;path/to/your/router.html#/page1&quot; and you should see the contents of our &quot;page1&quot;.</p>
+<h3 id="bonus-one-directional-data-binding-">Bonus - one-directional data-binding!</h3>
+<p>To make the router a little more useful I&#39;m going to add one-directional data-binding for automatic updating of the view when data in the controllers change. For that I&#39;ll be using <a href="https://simpl.info/observe/"><code>Object.observe()</code></a> <em>(note: I didn&#39;t need Chrome Canary for the flag to exist, I could enable it in Chrome 32-beta as well)</em></p>
+<p>I will extend the router handling function to register an object observer which rerenders the current view, so no advanced partial view updates at this time.</p>
+<h4 id="router-with-object-observation">Router with object observation</h4>
+<p>With a small rewrite the new router look like this:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> el = <span class="literal">null</span>, current = <span class="literal">null</span>;
+<span class="function"><span class="keyword">function</span> <span class="title">router</span> <span class="params">()</span> {</span>
+  <span class="comment">// Lazy load view element:</span>
+  el = el || document.getElementById(<span class="string">'view'</span>);
+  <span class="comment">// Clear existing observer:</span>
+  <span class="keyword">if</span> (current) {
+    Object.unobserve(current.controller, current.render);
+    current = <span class="literal">null</span>;
+  }
+  <span class="comment">// Current route url (getting rid of '#' in hash as well):</span>
+  <span class="keyword">var</span> url = location.hash.slice(<span class="number">1</span>) || <span class="string">'/'</span>;
+  <span class="comment">// Get route by url:</span>
+  <span class="keyword">var</span> route = routes[url];
+  <span class="comment">// Do we have both a view and a route?</span>
+  <span class="keyword">if</span> (el &amp;&amp; route.controller) {
+    <span class="comment">// Set current route information:</span>
+    current = {
+      controller: <span class="keyword">new</span> route.controller,
+      template: tmpl(route.templateId),
+      render: <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+        <span class="comment">// Render route template with John Resig's template engine:</span>
+        el.innerHTML = <span class="keyword">this</span>.template(<span class="keyword">this</span>.controller);
+      }
+    };
+    <span class="comment">// Render directly:</span>
+    current.render();
+    <span class="comment">// And observe for changes to trigger rerender:</span>
+    Object.observe(current.controller, current.render.bind(current));
+  }
+}
+</code></pre>
+<p><strong>That&#39;s it!</strong> As you can see, there&#39;s not that much extra code to get one-directional data-binding to work. I think the <code>Object.observe()</code> function is really great and can come in handy in many different scenarios in the future.</p>
+<h4 id="testing-the-data-binding">Testing the data-binding</h4>
+<p>To test the data-binding we&#39;ll just update one of the routes with a <code>setTimeout</code> to emulate a long running asynchronous function:</p>
+<pre><code class="lang-javascript">route(<span class="string">'/page1'</span>, <span class="string">'template1'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+  <span class="keyword">this</span>.greeting = <span class="string">'Hello world!'</span>;
+  <span class="keyword">this</span>.moreText = <span class="string">'Loading...'</span>;
+  setTimeout(<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+    <span class="keyword">this</span>.moreText = <span class="string">'Bacon ipsum...'</span>;
+  }.bind(<span class="keyword">this</span>), <span class="number">500</span>);
+});
+</code></pre>
+<p>Then when you go to the route <code>#/page1</code> you should se &quot;Loading...&quot; for a short while which is then exchanged with &quot;Bacon ipsum...&quot;.</p>
+<h3 id="result">Result</h3>
+<p><a href="https://gist.github.com/joakimbeng/7918297">The full version with data-binding can be found here</a>. I admit that it isn&#39;t only 20 lines of code, it&#39;s 28 without the comments, so it wasn&#39;t that far off :)</p>
+<p>Even with data-binding this is still a really basic router though, for example parameter support is still missing, but this was made more as an experiment than a complete library anyway.</p>
+<p>Hopefully someone liked it, as I did when coding it ;)</p>
+]]></description><link>http://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html</link><guid isPermaLink="false">0092e4c1-6ea1-478a-8cc6-9afecab35ba8</guid><dc:creator><![CDATA[Joakim Carlstein]]></dc:creator><pubDate>Sun, 15 Dec 2013 19:46:03 GMT</pubDate></item><item><title><![CDATA[It&#39;s here, my Ghost blog]]></title><description><![CDATA[<p><strong>For quite awhile now I&#39;ve been thinking</strong> about creating a blog where I could share my thoughts about anything, and particularly coding &amp; development...</p>
+<p>As I&#39;m really into <em>javascript</em> nowadays I was very glad to see the <a href="http://blog.ghost.org/public-launch/">public launch of Ghost</a> which is the blog platform that this one is built with.</p>
+<p>And here&#39;s how I got it up and running:</p>
+<h2 id="ghost-appfog">Ghost + Appfog</h2>
+<p>I decided that I wanted to host my blog on <a href="http://appfog.com">Appfog</a> because I think it&#39;s a good and easy to use service, moreover I&#39;ve discovered that they have a great uptime using another useful service <a href="http://pingdom.com">Pingdom</a>.</p>
+<h3 id="making-ghost-work-on-appfog">Making Ghost work on Appfog</h3>
+<h4 id="ignore-nodejs-0-10-requirement">Ignore NodeJS 0.10 requirement</h4>
+<p>Currently Appfog doesn&#39;t support NodeJS 0.10 which Ghost claims it needs, but fear not! Just comment out these lines in <code>./core/server.js</code> (starting at line 382):</p>
+<pre><code>    if (!semver<span class="preprocessor">.satisfies</span>(process<span class="preprocessor">.versions</span><span class="preprocessor">.node</span>, packageInfo<span class="preprocessor">.engines</span><span class="preprocessor">.node</span>)) {
+        console<span class="preprocessor">.log</span>(
+            <span class="string">"\nERROR: Unsupported version of Node"</span><span class="preprocessor">.red</span>,
+            <span class="string">"\nGhost needs Node version"</span><span class="preprocessor">.red</span>,
+            packageInfo<span class="preprocessor">.engines</span><span class="preprocessor">.node</span><span class="preprocessor">.yellow</span>,
+            <span class="string">"you are using version"</span><span class="preprocessor">.red</span>,
+            process<span class="preprocessor">.versions</span><span class="preprocessor">.node</span><span class="preprocessor">.yellow</span>,
+            <span class="string">"\nPlease go to http://nodejs.org to get the latest version"</span><span class="preprocessor">.green</span>
+        )<span class="comment">;</span>
+
+        process<span class="preprocessor">.exit</span>(<span class="number">0</span>)<span class="comment">;</span>
+    }
+</code></pre><p>And remove line 9-11 in <code>./package.json</code>:</p>
+<pre><code>{
+  // these lines:
+  <span class="string">"engines"</span>: {
+    <span class="string">"node"</span>: <span class="string">"&gt;=0.10.* &lt;0.11.4"</span>
+  },
+  // <span class="keyword">...</span>
+}
+</code></pre><p><strong>N.B</strong> Probably Ghost has a good reason for the 0.10 requirement, but I haven&#39;t found anything that doesn&#39;t work yet. <em>Please let me know me if you do!</em></p>
+<h4 id="change-db-to-mysql">Change DB to MySQL</h4>
+<p>Ghost uses Sqlite by default but have support for MySQL as well, which Appfog does too. I followed <a href="http://www.codeforest.net/ghost-blogging-platform-review">this post at Codeforest</a> and adapted it to Appfog like this:</p>
+<p>Add a MySQL service to your Appfog application, then modify <code>./config.js</code> lines 4-5 to this:</p>
+<pre><code>var path = require(<span class="string">'path'</span>),
+    mysql = <span class="transposed_variable">process.</span><span class="transposed_variable">env.</span>NODE_ENV === <span class="string">'production'</span> ? <span class="transposed_variable">JSON.</span>parse(<span class="transposed_variable">process.</span><span class="transposed_variable">env.</span>VCAP_SERVICES)<span class="matrix">["mysql-<span class="number">5.1</span>"]</span><span class="matrix">[<span class="number">0</span>].</span>credentials : <span class="cell">{}</span>,
+    config;
+</code></pre><p>And then under the <code>production</code> config section set the database configuration to the following:</p>
+<pre><code><span class="typedef">database: <span class="container">{
+    <span class="title">client</span>: '<span class="title">mysql'</span>,
+    <span class="title">connection</span>: {
+        <span class="title">database</span>: <span class="title">mysql</span>.<span class="title">name</span>,
+        <span class="title">host</span>: <span class="title">mysql</span>.<span class="title">host</span>,
+        <span class="title">user</span>: <span class="title">mysql</span>.<span class="title">user</span>,
+        <span class="title">password</span>: <span class="title">mysql</span>.<span class="title">password</span>
+    }</span>,</span>
+    debug: false
+},
+</code></pre><p>Also don&#39;t forget to install <code>mysql</code> module with:</p>
+<pre><code><span class="title">npm</span> install mysql
+</code></pre><h3 id="profit">Profit</h3>
+<p>That&#39;s it, now you can run:</p>
+<pre><code>af update <span class="tag">&lt;<span class="title">your_app_name</span>&gt;</span>
+</code></pre><p>And it should work!</p>
+<p><strong>Happy blogging!</strong></p>
+]]></description><link>http://joakim.beng.se/blog/posts/its-here-my-ghost-blog.html</link><guid isPermaLink="false">37bfc3ca-11fb-47f7-9bbe-0fc4b27e9837</guid><dc:creator><![CDATA[Joakim Carlstein]]></dc:creator><pubDate>Tue, 03 Dec 2013 18:32:37 GMT</pubDate></item></channel></rss>

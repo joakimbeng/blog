@@ -1,0 +1,17 @@
+{>"layouts/default"/}
+
+{<body}
+  <h2 class="category-info">
+    Articles in {category.name}
+  </h2>
+  {#posts}
+    <article class="post">
+      <header class="post-header">
+        {>"partials/post-header"/}
+      </header>
+      <section class="post-excerpt">
+        <p>{shortStripped|s}</p>
+      </section>
+    </article>
+  {/posts}
+{/body}

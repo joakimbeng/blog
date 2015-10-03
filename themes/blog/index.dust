@@ -1,0 +1,14 @@
+{>"layouts/default"/}
+
+{<body}
+  {#posts}
+    <article class="post">
+      <header class="post-header">
+        {>"partials/post-header"/}
+      </header>
+      <section class="post-excerpt">
+        <p>{shortStripped|s}</p>
+      </section>
+    </article>
+  {/posts}
+{/body}

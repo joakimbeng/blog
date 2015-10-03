@@ -1,0 +1,18 @@
+{
+  "title": "joakimbeng",
+  "description": "Let's code a better tomorrow...",
+  "url": "http://joakim.beng.se/blog",
+  "authors": [
+    {
+      "identifier": "jc",
+      "name": "Joakim Carlstein",
+      "default": true
+    }
+  ],
+  "truncate": 275,
+  "theme": "blog",
+  "services": {
+    "disqus": "joakimbeng",
+    "googleAnalytics": "UA-5147086-5"
+  }
+}

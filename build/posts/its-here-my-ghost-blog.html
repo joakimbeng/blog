@@ -1,0 +1,54 @@
+<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>It&#39;s here, my Ghost blog - joakimbeng</title><meta name="description" content="Let's code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><!-- <link href="../assets/css/main.css" rel="stylesheet"> --></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2013-12-03">03 Dec 2013</time>&nbsp;on <a class="tag" href="../tags/blog.html">blog</a>, <a class="tag" href="../tags/appfog.html">appfog</a>, <a class="tag" href="../tags/ghost.html">ghost</a></span><h1 class="post-title">It&#39;s here, my Ghost blog</h1><section class="post-content"><p><strong>For quite awhile now I&#39;ve been thinking</strong> about creating a blog where I could share my thoughts about anything, and particularly coding &amp; development...</p>
+<p>As I&#39;m really into <em>javascript</em> nowadays I was very glad to see the <a href="http://blog.ghost.org/public-launch/">public launch of Ghost</a> which is the blog platform that this one is built with.</p>
+<p>And here&#39;s how I got it up and running:</p>
+<h2 id="ghost-appfog">Ghost + Appfog</h2>
+<p>I decided that I wanted to host my blog on <a href="http://appfog.com">Appfog</a> because I think it&#39;s a good and easy to use service, moreover I&#39;ve discovered that they have a great uptime using another useful service <a href="http://pingdom.com">Pingdom</a>.</p>
+<h3 id="making-ghost-work-on-appfog">Making Ghost work on Appfog</h3>
+<h4 id="ignore-nodejs-0-10-requirement">Ignore NodeJS 0.10 requirement</h4>
+<p>Currently Appfog doesn&#39;t support NodeJS 0.10 which Ghost claims it needs, but fear not! Just comment out these lines in <code>./core/server.js</code> (starting at line 382):</p>
+<pre><code>    if (!semver<span class="preprocessor">.satisfies</span>(process<span class="preprocessor">.versions</span><span class="preprocessor">.node</span>, packageInfo<span class="preprocessor">.engines</span><span class="preprocessor">.node</span>)) {
+        console<span class="preprocessor">.log</span>(
+            <span class="string">"\nERROR: Unsupported version of Node"</span><span class="preprocessor">.red</span>,
+            <span class="string">"\nGhost needs Node version"</span><span class="preprocessor">.red</span>,
+            packageInfo<span class="preprocessor">.engines</span><span class="preprocessor">.node</span><span class="preprocessor">.yellow</span>,
+            <span class="string">"you are using version"</span><span class="preprocessor">.red</span>,
+            process<span class="preprocessor">.versions</span><span class="preprocessor">.node</span><span class="preprocessor">.yellow</span>,
+            <span class="string">"\nPlease go to http://nodejs.org to get the latest version"</span><span class="preprocessor">.green</span>
+        )<span class="comment">;</span>
+
+        process<span class="preprocessor">.exit</span>(<span class="number">0</span>)<span class="comment">;</span>
+    }
+</code></pre><p>And remove line 9-11 in <code>./package.json</code>:</p>
+<pre><code>{
+  // these lines:
+  <span class="string">"engines"</span>: {
+    <span class="string">"node"</span>: <span class="string">"&gt;=0.10.* &lt;0.11.4"</span>
+  },
+  // <span class="keyword">...</span>
+}
+</code></pre><p><strong>N.B</strong> Probably Ghost has a good reason for the 0.10 requirement, but I haven&#39;t found anything that doesn&#39;t work yet. <em>Please let me know me if you do!</em></p>
+<h4 id="change-db-to-mysql">Change DB to MySQL</h4>
+<p>Ghost uses Sqlite by default but have support for MySQL as well, which Appfog does too. I followed <a href="http://www.codeforest.net/ghost-blogging-platform-review">this post at Codeforest</a> and adapted it to Appfog like this:</p>
+<p>Add a MySQL service to your Appfog application, then modify <code>./config.js</code> lines 4-5 to this:</p>
+<pre><code>var path = require(<span class="string">'path'</span>),
+    mysql = <span class="transposed_variable">process.</span><span class="transposed_variable">env.</span>NODE_ENV === <span class="string">'production'</span> ? <span class="transposed_variable">JSON.</span>parse(<span class="transposed_variable">process.</span><span class="transposed_variable">env.</span>VCAP_SERVICES)<span class="matrix">["mysql-<span class="number">5.1</span>"]</span><span class="matrix">[<span class="number">0</span>].</span>credentials : <span class="cell">{}</span>,
+    config;
+</code></pre><p>And then under the <code>production</code> config section set the database configuration to the following:</p>
+<pre><code><span class="typedef">database: <span class="container">{
+    <span class="title">client</span>: '<span class="title">mysql'</span>,
+    <span class="title">connection</span>: {
+        <span class="title">database</span>: <span class="title">mysql</span>.<span class="title">name</span>,
+        <span class="title">host</span>: <span class="title">mysql</span>.<span class="title">host</span>,
+        <span class="title">user</span>: <span class="title">mysql</span>.<span class="title">user</span>,
+        <span class="title">password</span>: <span class="title">mysql</span>.<span class="title">password</span>
+    }</span>,</span>
+    debug: false
+},
+</code></pre><p>Also don&#39;t forget to install <code>mysql</code> module with:</p>
+<pre><code><span class="title">npm</span> install mysql
+</code></pre><h3 id="profit">Profit</h3>
+<p>That&#39;s it, now you can run:</p>
+<pre><code>af update <span class="tag">&lt;<span class="title">your_app_name</span>&gt;</span>
+</code></pre><p>And it should work!</p>
+<p><strong>Happy blogging!</strong></p>
+</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="http://twitter.com/share?text=It&#39;s here, my Ghost blog&amp;url=http://joakim.beng.se/blog/posts/its-here-my-ghost-blog.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://joakim.beng.se/blog/posts/its-here-my-ghost-blog.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a><a class="icon-google-plus" href="https://plus.google.com/share?url=http://joakim.beng.se/blog/posts/its-here-my-ghost-blog.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;"><span class="hidden">Google+</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/its-here-my-ghost-blog.html';var disqus_url = 'http://joakim.beng.se/blog/posts/its-here-my-ghost-blog.html';var disqus_title = 'It&#39;s here, my Ghost blog - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="http://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="http://github.com/joakimbeng/jiffy">jiffy</a> with a <a class="icon-ghost" href="http://ghost.org">Ghost</a> theme</section></div></footer><script type="text/javascript">var _gaq = _gaq || [];_gaq.push(['_setAccount', 'UA-5147086-5']);_gaq.push(['_trackPageview']);(function() {var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);})();</script></body></html>

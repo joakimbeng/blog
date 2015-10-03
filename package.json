@@ -1,0 +1,26 @@
+{
+  "name": "blog",
+  "version": "0.1.0",
+  "description": "Let's code a better tomorrow...",
+  "main": "index.js",
+  "scripts": {
+    "build": "jiffy",
+    "predeploy": "git subtree split --prefix build -b gh-pages",
+    "deploy": "git push -f origin gh-pages:gh-pages",
+    "postdeploy": "git branch -D gh-pages"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joakimbeng/blog.git"
+  },
+  "keywords": [],
+  "author": "Joakim Carlstein <joakim@klei.se>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joakimbeng/blog/issues"
+  },
+  "homepage": "https://github.com/joakimbeng/blog#readme",
+  "devDependencies": {
+    "jiffy": "^0.3.0"
+  }
+}
