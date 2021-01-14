@@ -15,7 +15,7 @@
     <link href="{path}assets/css/screen.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400">
     <link href="{path}assets/css/tomorrow-night-eighties.min.css" rel="stylesheet">
-    <!-- <link href="{path}assets/css/main.css" rel="stylesheet"> -->
+    <link rel="alternate" type="application/rss+xml" href="{blogUrl}/rss.xml">
   </head>
   <body class="{+bodyClass}home-template{/bodyClass}">
     {+bodyHeader}
