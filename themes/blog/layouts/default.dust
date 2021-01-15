@@ -8,12 +8,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>{+title/}{blogTitle}</title>
-    <meta name="description" content="Let's code a better tomorrow...">
+    <meta name="description" content="{blogDescription}">
     <meta name="HandheldFriendly" content="True">
     <meta name="MobileOptimized" content="320">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{path}assets/css/screen.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400">
     <link href="{path}assets/css/tomorrow-night-eighties.min.css" rel="stylesheet">
     <link rel="alternate" type="application/rss+xml" href="{blogUrl}/rss.xml">
   </head>
@@ -23,7 +23,7 @@
       <div class="vertical">
         <div id="site-head-content" class="inner">
           <h1 class="blog-title">{+bodyHeaderTitle}{blogTitle}{/bodyHeaderTitle}</h1>
-          <h2 class="blog-description">Let's code a better tomorrow...</h2>
+          <h2 class="blog-description">{blogDescription}</h2>
         </div>
       </div>
     </header>
