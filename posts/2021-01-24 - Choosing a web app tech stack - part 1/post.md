@@ -18,7 +18,7 @@ With that realization I decided to go with TS for both frontend and backend. And
 
 When linters became the norm for JavaScript development it was so nice because it could catch common typos like:
 
-```other
+```ts
 const myFunc = (value) => {
   return valeu * 2;
 }
@@ -26,7 +26,7 @@ const myFunc = (value) => {
 
 And it could do so without any types. But the problem is that it can’t catch similar typos in nested properties:
 
-```other
+```ts
 cost myFunc = (obj) => {
   return obj.valeu * 2;
 }
