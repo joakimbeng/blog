@@ -21,6 +21,6 @@
   },
   "homepage": "https://github.com/joakimbeng/blog#readme",
   "devDependencies": {
-    "jiffy": "^0.3.0"
+    "jiffy": "^0.4.0"
   }
 }

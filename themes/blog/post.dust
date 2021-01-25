@@ -15,7 +15,7 @@
       </a>
     </header>
     {>"partials/post-meta"/}
-    <h1 class="post-title">{name}</h1>
+    <h1 class="post-title">{title}</h1>
     <section class="post-content">
       {content|s}
     </section>
