@@ -18,23 +18,23 @@ With that realization I decided to go with TS for both frontend and backend. And
 
 When linters became the norm for JavaScript development it was so nice because it could catch common typos like:
 
-```ts
+```typescript
 const myFunc = (value) => {
   return valeu * 2;
-}
+};
 ```
 
 And it could do so without any types. But the problem is that it can’t catch similar typos in nested properties:
 
-```ts
-cost myFunc = (obj) => {
+```typescript
+const myFunc = (obj) => {
   return obj.valeu * 2;
-}
+};
 // or using destructuring
-cost anotherFunc = ({usreId}) => {
+const anotherFunc = ({usreId}) => {
   // many lines of code...
   doSomething(usreId); // here I even get autocomplete on that wrongly spelled "userId"
-}
+};
 ```
 
 Such errors will be caught by the TypeScript type checker (in almost real time in your editor) which is so nice, because IMO one of the most common uncaught errors are caused by typos like that especially after a big refactor (if you don’t have almost 100 % test coverage, which I admit I never have). Features like that helps out a lot, even in a one person project!
