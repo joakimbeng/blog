@@ -1,4 +1,4 @@
-<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>A JavaScript test runner in 20 lines - joakimbeng</title><meta name="description" content="Let's code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><!-- <link href="../assets/css/main.css" rel="stylesheet"> --></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2015-02-23">23 Feb 2015</time>&nbsp;on <a class="tag" href="../tags/javascript.html">JavaScript</a>, <a class="tag" href="../tags/testing.html">Testing</a></span><h1 class="post-title">A JavaScript test runner in 20 lines</h1><section class="post-content"><p>A few weeks ago I saw <a href="https://twitter.com/snuggsi/status/565531862895169536">this tweet about the world&#39;s smallest test library</a> by <a href="https://twitter.com/snuggsi">@snuggsi</a>, which is a great little snippet! Though I see it more as the world&#39;s smallest assertion library, so I&#39;ve decided to do a follow up on my previous post about <a href="/a-javascript-router-in-20-lines/">A JavaScript router in 20 lines</a> and now make a simple test runner in about the same amount of code.</p>
+<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>A JavaScript test runner in 20 lines - joakimbeng</title><meta name="description" content="Let&#39;s code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><link rel="alternate" type="application/rss+xml" href="https://joakim.beng.se/blog/rss.xml"><script async src="https://www.googletagmanager.com/gtag/js?id=UA-5147086-5"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-5147086-5');</script></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2015-02-23">23 Feb 2015</time>&nbsp;on <a class="tag" href="../tags/javascript.html">JavaScript</a>, <a class="tag" href="../tags/testing.html">Testing</a>, <a class="tag" href="../tags/20-liners.html">20-liners</a></span><h1 class="post-title">A JavaScript test runner in 20 lines</h1><section class="post-content"><p>A few weeks ago I saw <a href="https://twitter.com/snuggsi/status/565531862895169536">this tweet about the world&#39;s smallest test library</a> by <a href="https://twitter.com/snuggsi">@snuggsi</a>, which is a great little snippet! Though I see it more as the world&#39;s smallest assertion library, so I&#39;ve decided to do a follow up on my previous post about <a href="/a-javascript-router-in-20-lines/">A JavaScript router in 20 lines</a> and now make a simple test runner in about the same amount of code.</p>
 <h2 id="creating-a-test-runner">Creating a test runner</h2>
 <h3 id="must-haves">Must haves</h3>
 <p>When I think of a test runner there are a few things it must have IMO, mainly:</p>
@@ -10,164 +10,154 @@
 <li>Tell if everything went fine or not, and provide a stack trace if it didn&#39;t</li>
 </ul>
 <p>Also when writing unit tests in JavaScript I want the test runner to be <em>able to test asynchronous code</em>.</p>
-<h3 id="some-code-please-">Some code please...</h3>
+<h3 id="some-code-please">Some code please...</h3>
 <p>First we&#39;ll need somewhere to store all tests to run, i.e. the test queue, a simple array will do:</p>
-<pre><code class="lang-javascript"><span class="keyword">var</span> tests = [];
-</code></pre>
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> tests = [];</code></pre>
 <p>Then we must have a way to add tests to that queue. I usually use and like <a href="http://mochajs.org/">Mocha</a> with the BDD syntax, which looks like this:</p>
-<pre><code class="lang-javascript">describe(<span class="string">'thing to test'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-  it(<span class="string">'fulfills something...'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-    <span class="comment">// test code...</span>
+<pre><code class="language-javascript">describe(<span class="hljs-string">&#x27;thing to test&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  it(<span class="hljs-string">&#x27;fulfills something...&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-comment">// test code...</span>
   });
-});
-</code></pre>
+});</code></pre>
 <p>So let&#39;s make a simplified version of that:</p>
-<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">test</span> <span class="params">(name, cb)</span> {</span>
-    tests.push({name: name, test: cb});
+<pre><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">test</span> (<span class="hljs-params">name, cb</span>) </span>{
+    tests.push({<span class="hljs-attr">name</span>: name, <span class="hljs-attr">test</span>: cb});
 }
 
-<span class="comment">// Usage example:</span>
-test(<span class="string">'thing to test fulfills something...'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-  <span class="comment">// test code...</span>
-});
-</code></pre>
+<span class="hljs-comment">// Usage example:</span>
+test(<span class="hljs-string">&#x27;thing to test fulfills something...&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-comment">// test code...</span>
+});</code></pre>
 <p>Simple enough :)</p>
 <h4 id="syntax-for-asynchronous-tests">Syntax for asynchronous tests</h4>
 <p>How about asynchronous tests then? Once again I&#39;ll take inspiration from the Mocha framework, which uses <code>done</code> callbacks in the tests to execute when your test is done.</p>
 <p>With that change our usage example now looks like:</p>
-<pre><code class="lang-javascript">test(<span class="string">'thing to test fulfills something...'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(done)</span> {</span>
-  doSomethingAsync(<span class="function"><span class="keyword">function</span> <span class="params">(result)</span> {</span>
-    <span class="comment">// assertions...</span>
+<pre><code class="language-javascript">test(<span class="hljs-string">&#x27;thing to test fulfills something...&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">done</span>) </span>{
+  doSomethingAsync(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) </span>{
+    <span class="hljs-comment">// assertions...</span>
     done();
   });
-});
-</code></pre>
+});</code></pre>
 <p>Looking good!</p>
 <h3 id="running-tests">Running tests</h3>
 <p>Let&#39;s add a simple test, which we will run in the next step (<strong>note</strong> I&#39;ll use the small assertion library from the tweet mentioned in the beginning of the post):</p>
-<pre><code class="lang-javascript">test(<span class="string">'1+1 equals 2'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(done)</span> {</span>
-  assert(<span class="number">1</span> + <span class="number">1</span> === <span class="number">2</span>, <span class="string">'1+1 should be 2'</span>);
+<pre><code class="language-javascript">test(<span class="hljs-string">&#x27;1+1 equals 2&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">done</span>) </span>{
+  assert(<span class="hljs-number">1</span> + <span class="hljs-number">1</span> === <span class="hljs-number">2</span>, <span class="hljs-string">&#x27;1+1 should be 2&#x27;</span>);
   done();
-});
-</code></pre>
+});</code></pre>
 <p>If we want to run just this one test, we could do something like:</p>
-<pre><code class="lang-javascript"><span class="keyword">var</span> testToRun = tests[<span class="number">0</span>];
-<span class="keyword">try</span> {
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> testToRun = tests[<span class="hljs-number">0</span>];
+<span class="hljs-keyword">try</span> {
   testToRun.test(done);
-} <span class="keyword">catch</span> (err) {
+} <span class="hljs-keyword">catch</span> (err) {
   done(err);
 }
-<span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
-  <span class="keyword">if</span> (err) {
-    console.error(<span class="string">'Test failed!'</span>);
-  } <span class="keyword">else</span> {
-    console.log(<span class="string">'Test succeeded!'</span>);
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">done</span> (<span class="hljs-params">err</span>) </span>{
+  <span class="hljs-keyword">if</span> (err) {
+    <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&#x27;Test failed!&#x27;</span>);
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;Test succeeded!&#x27;</span>);
   }
-}
-</code></pre>
+}</code></pre>
 <p>When we run this in <a href="http://nodejs.org">Node</a> or in the browser a nice <code>&quot;Test succeeded!&quot;</code> should show up in the console.</p>
 <h4 id="running-all-tests">Running all tests</h4>
 <p>Let&#39;s wrap that up in a function and make it get the next test from the queue, each time it&#39;s executed:</p>
-<pre><code class="lang-javascript"><span class="keyword">var</span> i = <span class="number">0</span>;
-<span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
-  <span class="keyword">var</span> testToRun = tests[i++];
-  <span class="keyword">try</span> {
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>;
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">run</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> testToRun = tests[i++];
+  <span class="hljs-keyword">try</span> {
     testToRun.test(done);
-  } <span class="keyword">catch</span> (err) {
+  } <span class="hljs-keyword">catch</span> (err) {
     done(err);
   }
-  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
-    <span class="keyword">if</span> (err) {
-      console.error(<span class="string">'Test failed!'</span>);
-    } <span class="keyword">else</span> {
-      console.log(<span class="string">'Test succeeded!'</span>);
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">done</span> (<span class="hljs-params">err</span>) </span>{
+    <span class="hljs-keyword">if</span> (err) {
+      <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&#x27;Test failed!&#x27;</span>);
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;Test succeeded!&#x27;</span>);
     }
   }
-}
-</code></pre>
+}</code></pre>
 <p>A little better, but still not useful, we don&#39;t want to manually run the runner once for each test don&#39;t we?</p>
 <p>A useful little trick here, inspired by the middleware queue in <a href="http://expressjs.com/">Express</a>, is to wrap the test picking and execution in a function called <code>next</code> which will be passed as the <code>done</code> callback to all tests until there are no tests left. Like this:</p>
-<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
-  <span class="keyword">var</span> i = <span class="number">0</span>; <span class="comment">// Move this in here, so it resets on each run...</span>
-  next(); <span class="comment">// Start runner...</span>
-  <span class="function"><span class="keyword">function</span> <span class="title">next</span> <span class="params">(err)</span> {</span>
-    <span class="keyword">var</span> testToRun = tests[i++];
-    <span class="comment">// Stop test runner on error or when no tests are left:</span>
-    <span class="keyword">if</span> (err || !testToRun) <span class="keyword">return</span> done(err);
-    <span class="keyword">try</span> {
+<pre><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">run</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; <span class="hljs-comment">// Move this in here, so it resets on each run...</span>
+  next(); <span class="hljs-comment">// Start runner...</span>
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">next</span> (<span class="hljs-params">err</span>) </span>{
+    <span class="hljs-keyword">var</span> testToRun = tests[i++];
+    <span class="hljs-comment">// Stop test runner on error or when no tests are left:</span>
+    <span class="hljs-keyword">if</span> (err || !testToRun) <span class="hljs-keyword">return</span> done(err);
+    <span class="hljs-keyword">try</span> {
       testToRun.test(next);
-    } <span class="keyword">catch</span> (err) {
+    } <span class="hljs-keyword">catch</span> (err) {
       next(err);
     }
   }
-  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
-    <span class="keyword">if</span> (err) {
-      console.error(<span class="string">'Tests failed!'</span>);
-    } <span class="keyword">else</span> {
-      console.log(<span class="string">'Tests succeeded!'</span>);
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">done</span> (<span class="hljs-params">err</span>) </span>{
+    <span class="hljs-keyword">if</span> (err) {
+      <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&#x27;Tests failed!&#x27;</span>);
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;Tests succeeded!&#x27;</span>);
     }
   }
-}
-</code></pre>
+}</code></pre>
 <p>That&#39;s better! Now at least all tests will be run, by calling <code>run()</code> just once.</p>
-<h3 id="it-s-all-about-presentation">It&#39;s all about presentation</h3>
+<h3 id="its-all-about-presentation">It&#39;s all about presentation</h3>
 <p>This test runner works, but it does not give you any information of what succeeded and what failed. We need to fix that:</p>
-<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
-  <span class="keyword">var</span> i = <span class="number">0</span>;
-  <span class="keyword">var</span> testToRun; <span class="comment">// Move this here, to get info about last test later...</span>
-  next(); <span class="comment">// Start runner...</span>
-  <span class="function"><span class="keyword">function</span> <span class="title">next</span> <span class="params">(err)</span> {</span>
-    <span class="keyword">if</span> (testToRun) {
-      <span class="comment">// Show status for last test run:</span>
-      <span class="keyword">if</span> (err) {
-        console.error(<span class="string">'✘ '</span> + testToRun.name);
-      } <span class="keyword">else</span> {
-        console.log(<span class="string">'✔ '</span> + testToRun.name);
+<pre><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">run</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>;
+  <span class="hljs-keyword">var</span> testToRun; <span class="hljs-comment">// Move this here, to get info about last test later...</span>
+  next(); <span class="hljs-comment">// Start runner...</span>
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">next</span> (<span class="hljs-params">err</span>) </span>{
+    <span class="hljs-keyword">if</span> (testToRun) {
+      <span class="hljs-comment">// Show status for last test run:</span>
+      <span class="hljs-keyword">if</span> (err) {
+        <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&#x27;✘ &#x27;</span> + testToRun.name);
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;✔ &#x27;</span> + testToRun.name);
       }
     }
     testToRun = tests[i++];
-    <span class="comment">// Stop test runner on error or when no tests are left:</span>
-    <span class="keyword">if</span> (err || !testToRun) <span class="keyword">return</span> done(err);
-    <span class="keyword">try</span> {
-      <span class="comment">// Calling `call` makes a better stack trace:</span>
+    <span class="hljs-comment">// Stop test runner on error or when no tests are left:</span>
+    <span class="hljs-keyword">if</span> (err || !testToRun) <span class="hljs-keyword">return</span> done(err);
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-comment">// Calling `call` makes a better stack trace:</span>
       testToRun.test.call(testToRun.test, next);
-    } <span class="keyword">catch</span> (err) {
+    } <span class="hljs-keyword">catch</span> (err) {
       next(err);
     }
   }
-  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
-      <span class="comment">// Show all remaining tests as skipped:</span>
-    tests.slice(i).map(<span class="function"><span class="keyword">function</span> <span class="params">(skippedTest)</span> {</span> console.log(<span class="string">'-'</span>, skippedTest.name); });
-    <span class="keyword">if</span> (err) {
-      console.error(<span class="string">'\nTests failed!\n'</span> + err.stack); <span class="comment">// Add stack trace to output...</span>
-    } <span class="keyword">else</span> {
-      console.log(<span class="string">'\nTests succeeded!'</span>);
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">done</span> (<span class="hljs-params">err</span>) </span>{
+      <span class="hljs-comment">// Show all remaining tests as skipped:</span>
+    tests.slice(i).map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">skippedTest</span>) </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;-&#x27;</span>, skippedTest.name); });
+    <span class="hljs-keyword">if</span> (err) {
+      <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&#x27;\nTests failed!\n&#x27;</span> + err.stack); <span class="hljs-comment">// Add stack trace to output...</span>
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;\nTests succeeded!&#x27;</span>);
     }
   }
-}
-</code></pre>
+}</code></pre>
 <p>That&#39;s more like it!</p>
 <p>But, there is still one problem. I said <em>20 lines of code</em>, and this is a total of 36 including comments, so there&#39;s still some refactoring that can be done.</p>
 <h3 id="wrapping-it-up">Wrapping it up</h3>
 <p>Let&#39;s save some lines by removing all comments and refactor some bits and pieces to oneliners, like so:</p>
-<pre><code class="lang-javascript"><span class="function"><span class="keyword">function</span> <span class="title">run</span> <span class="params">()</span> {</span>
-  <span class="keyword">var</span> i = <span class="number">0</span>, testToRun;
-  (<span class="function"><span class="keyword">function</span> <span class="title">next</span> <span class="params">(err)</span> {</span>
-    <span class="keyword">if</span> (testToRun) console[err ? <span class="string">'error'</span> : <span class="string">'log'</span>](err ? <span class="string">'✘'</span> : <span class="string">'✔'</span>, testToRun.name);
-    <span class="keyword">if</span> (err || !(testToRun = tests[i++])) <span class="keyword">return</span> done(err);
-    <span class="keyword">try</span> {
+<pre><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">run</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, testToRun;
+  (<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">next</span> (<span class="hljs-params">err</span>) </span>{
+    <span class="hljs-keyword">if</span> (testToRun) <span class="hljs-built_in">console</span>[err ? <span class="hljs-string">&#x27;error&#x27;</span> : <span class="hljs-string">&#x27;log&#x27;</span>](err ? <span class="hljs-string">&#x27;✘&#x27;</span> : <span class="hljs-string">&#x27;✔&#x27;</span>, testToRun.name);
+    <span class="hljs-keyword">if</span> (err || !(testToRun = tests[i++])) <span class="hljs-keyword">return</span> done(err);
+    <span class="hljs-keyword">try</span> {
       testToRun.test.call(testToRun.test, next);
-    } <span class="keyword">catch</span> (err) {
+    } <span class="hljs-keyword">catch</span> (err) {
       next(err);
     }
   })();
-  <span class="function"><span class="keyword">function</span> <span class="title">done</span> <span class="params">(err)</span> {</span>
-    tests.slice(i).map(<span class="function"><span class="keyword">function</span> <span class="params">(skippedTest)</span> {</span> console.log(<span class="string">'-'</span>, skippedTest.name); });
-    console[err ? <span class="string">'error'</span> : <span class="string">'log'</span>](<span class="string">'\nTests '</span> + (err ? <span class="string">'failed!\n'</span> + err.stack : <span class="string">'succeeded!'</span>));
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">done</span> (<span class="hljs-params">err</span>) </span>{
+    tests.slice(i).map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">skippedTest</span>) </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;-&#x27;</span>, skippedTest.name); });
+    <span class="hljs-built_in">console</span>[err ? <span class="hljs-string">&#x27;error&#x27;</span> : <span class="hljs-string">&#x27;log&#x27;</span>](<span class="hljs-string">&#x27;\nTests &#x27;</span> + (err ? <span class="hljs-string">&#x27;failed!\n&#x27;</span> + err.stack : <span class="hljs-string">&#x27;succeeded!&#x27;</span>));
   }
-}
-</code></pre>
+}</code></pre>
 <p>Including the <code>tests</code> array declaration and the <code>test</code> function, for adding tests, it sums up to <strong>20 lines!</strong> How about that :)</p>
 <p>Finally <a href="https://gist.github.com/joakimbeng/8f57dae814a4802e2ae6">here&#39;s a gist with the complete version</a> including a basic module wrapper and a runnable usage example.</p>
 <p>All the best!</p>
-</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="http://twitter.com/share?text=A JavaScript test runner in 20 lines&amp;url=http://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a><a class="icon-google-plus" href="https://plus.google.com/share?url=http://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;"><span class="hidden">Google+</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/a-javascript-test-runner-in-20-lines.html';var disqus_url = 'http://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html';var disqus_title = 'A JavaScript test runner in 20 lines - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="http://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="http://github.com/joakimbeng/jiffy">jiffy</a> with a <a class="icon-ghost" href="http://ghost.org">Ghost</a> theme</section></div></footer><script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-5147086-5', 'auto');ga('send', 'pageview');</script></body></html>
+</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="https://twitter.com/share?text=A JavaScript test runner in 20 lines&amp;url=https://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/a-javascript-test-runner-in-20-lines.html';var disqus_url = 'https://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html';var disqus_title = 'A JavaScript test runner in 20 lines - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="https://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="https://github.com/joakimbeng/jiffy">jiffy</a> with a <a href="https://ghost.org"><i class="icon-ghost"></i> Ghost</a> theme</section></div></footer></body></html>
