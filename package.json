@@ -22,5 +22,8 @@
   "homepage": "https://github.com/joakimbeng/blog#readme",
   "devDependencies": {
     "jiffy": "^0.4.0"
+  },
+  "prettier": {
+    "printWidth": 120
   }
 }
