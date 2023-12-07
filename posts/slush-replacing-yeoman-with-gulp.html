@@ -1,0 +1,129 @@
+<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>Slush - replacing Yeoman with Gulp - joakimbeng</title><meta name="description" content="Let's code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><!-- <link href="../assets/css/main.css" rel="stylesheet"> --></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2014-03-24">24 Mar 2014</time>&nbsp;on <a class="tag" href="../tags/gulp.html">gulp</a>, <a class="tag" href="../tags/yeoman.html">yeoman</a>, <a class="tag" href="../tags/grunt.html">grunt</a>, <a class="tag" href="../tags/slush.html">slush</a></span><h1 class="post-title">Slush - replacing Yeoman with Gulp</h1><section class="post-content"><p>When I first came across <a href="http://gruntjs.com">Grunt</a> I thought it was a great tool, and it certainly was! Until I started to develop and maintain some grunt plugins of my own. Then I felt that the API was not intuitive enough for a smooth development cycle.
+It got even worse when I began maintaining my own huge gruntfile in my <a href="http://yeoman.io">Yeoman</a> MEAN app generator (<a href="http://github.com/klei/generator-klei">generator-klei</a>).</p>
+<h2 id="gulp-to-the-rescue">Gulp to the rescue</h2>
+<p>Then came <a href="http://gulpjs.com">Gulp</a> and I instantly felt that it was not only a great tool, but even a superb one! I really like the &quot;code before configuration&quot; mantra and even more so the advocacy of DRYness when developing plugins.</p>
+<h3 id="easier-to-maintain">Easier to maintain</h3>
+<p>The gulp version of my <code>generator-klei</code> is under development (take a look at the <a href="https://github.com/klei/generator-klei/tree/gulp">gulp branch</a> if you&#39;re intrested) and I&#39;ve gone from 600 lines of gruntfile to a 300 lines long gulpfile with maintained functionality!</p>
+<h2 id="back-to-the-point">Back to the point</h2>
+<p>When developing the Yeoman generator I discovered it wasn&#39;t only the gruntfile that was hard to maintain, but also the generator itself. So a couple of weeks ago I began thinking of how to replace Yeoman with something simpler.</p>
+<h3 id="main-features-of-a-generator">Main features of a generator</h3>
+<p>First I listed all the features of a Yeoman generator, the features that I&#39;m using anyway:</p>
+<ol>
+<li>Copying a project structure (with folders and everything)</li>
+<li>Prompting the user for some project options</li>
+<li>Templating some of the project files depending on the prompt answers</li>
+<li>Auto-installing needed dependencies for the generated project</li>
+<li>Prompting which files to overwrite (when running the generator a second time)</li>
+</ol>
+<h3 id="gulp-as-a-generator">Gulp as a generator</h3>
+<p>So I thought, wouldn&#39;t this be a great use for gulp?</p>
+<p>Let&#39;s see what it handles out of the box:</p>
+<ol>
+<li>Supported natively by <a href="https://github.com/gulpjs/gulp/blob/master/docs/API.md#gulpsrcglobs-options"><code>gulp.src</code></a></li>
+<li>One could use <a href="https://github.com/SBoudrias/Inquirer.js"><code>inquirer</code></a> directly for this</li>
+<li>For instance <a href="https://github.com/sindresorhus/gulp-template"><code>gulp-template</code></a> does this</li>
+<li>Missing. Could easily be implemented as a gulp plugin <em>(see below)</em></li>
+<li>Missing. Could easily be implemented as a gulp plugin <em>(see below)</em></li>
+</ol>
+<p>As you see, gulp can already act as a simple project generator!</p>
+<h4 id="a-basic-gulp-project-scaffolding-example">A basic Gulp project scaffolding example</h4>
+<p>Let&#39;s say we have a directory structure for our first simple generator like this:</p>
+<pre><code>my-basic-generator/
+├── app
+│   └── templates           <span class="preprocessor"># This contains the app template</span>
+│       ├── gulpfile<span class="variable">.js</span>
+│       ├── index<span class="variable">.html</span>
+│       └── package<span class="variable">.json</span>
+├── generator-gulpfile<span class="variable">.js</span>
+└── package<span class="variable">.json</span>
+</code></pre><p>Then we&#39;ll create a gulpfile made for scaffolding purposes, <code>generator-gulpfile.js</code>:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> gulp = require(<span class="string">'gulp'</span>),
+    template = require(<span class="string">'gulp-template'</span>);
+
+gulp.task(<span class="string">'default'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+  <span class="keyword">return</span> gulp.src(__dirname + <span class="string">'/app/templates/**'</span>) <span class="comment">// Notice the `__dirname` here</span>
+    .pipe(template({})) <span class="comment">// Empty data for now</span>
+    .pipe(gulp.dest(<span class="string">'./'</span>)); <span class="comment">// Relative to cwd</span>
+});
+</code></pre>
+<p>We can then scaffold our project into current working directory like this:</p>
+<pre><code class="lang-bash">/path/to/my-basic-generator/node_modules/.bin/gulp --gulpfile /path/to/my-basic-generator/generator-gulpfile.js --cwd .
+</code></pre>
+<p>Alright! As you can see, there&#39;s a lot we can do with Gulp already, but it&#39;s not that convenient yet - let&#39;s change that!</p>
+<h2 id="introducing-slush-the-streaming-scaffolding-system">Introducing Slush - the streaming scaffolding system</h2>
+<p>To make it easier to use a project generator built with Gulp I&#39;ve built <a href="http://slushjs.github.io/generators">Slush</a>. Slush locates all installed Gulp built project generators, from now on called &quot;slush generators&quot;, and makes it possible to run such a generator without the need to specify it&#39;s location, like this:</p>
+<pre><code class="lang-bash">slush &lt;generator name&gt; [&lt;generator task&gt;]
+</code></pre>
+<p>Slush can, and should be, installed globally with:</p>
+<pre><code class="lang-bash">npm install -g slush
+</code></pre>
+<h3 id="slush-generators">Slush generators</h3>
+<p>Slush itself does not depend on Gulp but each generator must have Gulp as a dependency for this to work, Slush will run the Gulp module local to the generator.</p>
+<p>A slush generator should have the <code>&quot;slushgenerator&quot;</code> keyword in its <code>package.json</code> and should be named <code>slush-&lt;generator-name-dashed&gt;</code>, e.g. &quot;slush-angular&quot;.</p>
+<p>To make a slush generator locatable for the Slush CLI it must be installed globally, e.g:</p>
+<pre><code class="lang-bash">npm install -g slush-angular
+</code></pre>
+<h3 id="the-slushfile">The slushfile</h3>
+<p>To distinguish between the scaffolding gulpfile and an ordinary gulpfile used for development the former should be named <code>slushfile.js</code>. There&#39;s no difference between an ordinary gulpfile and the slushfile in how you write it, but only how you use it.</p>
+<p>All gulp plugins used within a generator&#39;s slushfile must be installed as ordinary project dependencies, i.e. <em>not</em> <code>devDependencies</code>.</p>
+<h3 id="making-a-complete-yeoman-like-slush-generator">Making a complete Yeoman like Slush generator</h3>
+<p>As you may remember I earlier in the post listed some features of a Yeoman generator that was not currently available natively in gulp or via plugins, which was:</p>
+<ul>
+<li>Auto-installing needed dependencies for the generated project</li>
+<li>Prompting which files to overwrite (when running the generator a second time)</li>
+</ul>
+<p>So I decided to build two gulp plugins to handle this.</p>
+<h4 id="install-project-dependencies-with-gulp-install-https-github-com-slushjs-gulp-install-">Install project dependencies with <a href="https://github.com/slushjs/gulp-install"><code>gulp-install</code></a></h4>
+<p>If the file stream contains a <code>package.json</code> file the plugin will trigger a call to <code>npm install</code> in the scaffolded project, and similar if it contains a <code>bower.json</code> file it will run <code>bower install</code>.</p>
+<h4 id="prompt-before-overwrite-with-gulp-conflict-https-github-com-slushjs-gulp-conflict-">Prompt before overwrite with <a href="https://github.com/slushjs/gulp-conflict"><code>gulp-conflict</code></a></h4>
+<p>Based on <a href="https://github.com/yeoman/generator/blob/master/lib/util/conflicter.js">Yeoman&#39;s internal conflicter</a> the <code>gulp-conflict</code> plugin will prompt what to do when files in stream is conflicting with files in the given destination directory.</p>
+<h3 id="a-complete-slush-generator-example">A complete Slush generator example</h3>
+<p>Let&#39;s revisit the basic gulp generator example from above and make it a complete slush generator with prompt, autoinstall and everything.</p>
+<p>We still have the same directory structure:</p>
+<pre><code>slush-basic/                <span class="preprocessor"># By convention</span>
+├── app
+│   └── templates           <span class="preprocessor"># This contains the app template</span>
+│       ├── gulpfile<span class="variable">.js</span>
+│       ├── index<span class="variable">.html</span>
+│       └── package<span class="variable">.json</span>
+├── slushfile<span class="variable">.js</span>            <span class="preprocessor"># By convention</span>
+└── package<span class="variable">.json</span>
+</code></pre><p>And here&#39;s the content of our <code>slushfile.js</code>:</p>
+<pre><code class="lang-javascript"><span class="keyword">var</span> gulp = require(<span class="string">'gulp'</span>),
+    install = require(<span class="string">'gulp-install'</span>),
+    conflict = require(<span class="string">'gulp-conflict'</span>),
+    template = require(<span class="string">'gulp-template'</span>),
+    inquirer = require(<span class="string">'inquirer'</span>);
+
+gulp.task(<span class="string">'default'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(done)</span> {</span>
+  inquirer.prompt([
+    {type: <span class="string">'input'</span>, name: <span class="string">'name'</span>, message: <span class="string">'Name for the app?'</span>}
+  ],
+  <span class="function"><span class="keyword">function</span> <span class="params">(answers)</span> {</span>
+    gulp.src(__dirname + <span class="string">'/app/templates/**'</span>) <span class="comment">// Relative to __dirname</span>
+      .pipe(template(answers))
+      .pipe(conflict(<span class="string">'./'</span>))
+      .pipe(gulp.dest(<span class="string">'./'</span>)) <span class="comment">// Relative to cwd</span>
+      .pipe(install())
+      .on(<span class="string">'finish'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
+        done(); <span class="comment">// Finished!</span>
+      });
+  });
+});
+</code></pre>
+<p><strong>There you have it!</strong> We can then install our new generator with:</p>
+<pre><code class="lang-bash">npm install -g slush-basic   <span class="comment"># if it's published</span>
+<span class="comment"># or</span>
+npm link .                   <span class="comment"># for development</span>
+</code></pre>
+<p>And use it with:</p>
+<pre><code class="lang-bash">slush basic
+</code></pre>
+<p><strong>Done!</strong> As you can see, with just a few lines of gulp goodness we have recreated the functionality of a Yeoman generator.</p>
+<h2 id="final-words">Final words</h2>
+<p>This is just the first version of Slush and I&#39;ve probably missed something useful in the whole Yeoman generator workflow, please feel free to comment and contribute!</p>
+<h3 id="build-generators">Build generators</h3>
+<p>I would like to see as many useful generators out there as possible. I know I&#39;ll be using this instead of Yeoman from now on anyway...</p>
+<h3 id="it-s-gulp">It&#39;s Gulp</h3>
+<p>Also remember that Slush comes with no functionality of its own, the only thing it provides is a convention and convenience of running global gulpfiles (in this case slushfiles) with the purpose of scaffolding projects, or anything else useful for that matter. So if something is missing it should probably be implemented as a gulp plugin.</p>
+</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="http://twitter.com/share?text=Slush - replacing Yeoman with Gulp&amp;url=http://joakim.beng.se/blog/posts/slush-replacing-yeoman-with-gulp.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://joakim.beng.se/blog/posts/slush-replacing-yeoman-with-gulp.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a><a class="icon-google-plus" href="https://plus.google.com/share?url=http://joakim.beng.se/blog/posts/slush-replacing-yeoman-with-gulp.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;"><span class="hidden">Google+</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/slush-replacing-yeoman-with-gulp.html';var disqus_url = 'http://joakim.beng.se/blog/posts/slush-replacing-yeoman-with-gulp.html';var disqus_title = 'Slush - replacing Yeoman with Gulp - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="http://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="http://github.com/joakimbeng/jiffy">jiffy</a> with a <a class="icon-ghost" href="http://ghost.org">Ghost</a> theme</section></div></footer><script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-5147086-5', 'auto');ga('send', 'pageview');</script></body></html>
