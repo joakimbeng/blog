@@ -1,0 +1,231 @@
+<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>A memoizer like React&#39;s useMemo in 20 lines - joakimbeng</title><meta name="description" content="Let&#39;s code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><link rel="alternate" type="application/rss+xml" href="https://joakim.beng.se/blog/rss.xml"><script async src="https://www.googletagmanager.com/gtag/js?id=UA-5147086-5"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-5147086-5');</script></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2021-02-11">11 Feb 2021</time>&nbsp;on <a class="tag" href="../tags/javascript.html">JavaScript</a>, <a class="tag" href="../tags/react.html">React</a>, <a class="tag" href="../tags/20-liners.html">20-liners</a></span><h1 class="post-title">A memoizer like React&#39;s useMemo in 20 lines</h1><section class="post-content"><p>This is another post in my series of ”20 lines of code” posts. For the previous ones see:</p>
+<ul>
+<li><a href="https://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html">A JavaScript router in 20 lines</a></li>
+<li><a href="https://joakim.beng.se/blog/posts/a-javascript-test-runner-in-20-lines.html">A JavaScript test runner in 20 lines</a></li>
+</ul>
+<h2 id="whats-memoization-and-whats-special-about-reacts-usememo">What’s memoization and what’s special about React’s useMemo?</h2>
+<p><a href="https://en.wikipedia.org/wiki/Memoization">Memoization</a>, in short, is used to cache function results given its input to avoid expensive computations. React&#39;s <a href="https://reactjs.org/docs/hooks-reference.html#usememo"><code>useMemo</code></a> is a special kind of memoization function as it does not re-run the “expensive computation” based on its input but on an explicit list of dependencies, which should be set to all variables that the memoized function depends on/uses.</p>
+<p>Let’s demonstrate the difference with an example...</p>
+<p><strong>Example of memoization tracking its input:</strong></p>
+<pre><code class="language-javascript"><span class="hljs-keyword">let</span> a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];
+<span class="hljs-keyword">const</span> expensive = <span class="hljs-function">(<span class="hljs-params">b</span>) =&gt;</span> {
+  <span class="hljs-keyword">return</span> a.reduce(<span class="hljs-function">(<span class="hljs-params">sum, val</span>) =&gt;</span> sum * b + val, <span class="hljs-number">0</span>);
+};
+<span class="hljs-keyword">const</span> expensiveMemoized = memoize(expensive);
+expensiveMemoized(<span class="hljs-number">2</span>);
+<span class="hljs-comment">// =&gt; 12 (not in cache)</span>
+expensiveMemoized(<span class="hljs-number">2</span>);
+<span class="hljs-comment">// =&gt; 12 (from cache)</span>
+a = [...a, <span class="hljs-number">4</span>];
+expensiveMemoized(<span class="hljs-number">2</span>);
+<span class="hljs-comment">// =&gt; 12 (from cache, because &quot;a&quot; is not part of the function&#x27;s input)</span></code></pre>
+<p><strong>Example using useMemo:</strong></p>
+<p>(ignore the fact that <code>useExpensive</code> should be used within a component or other hook)</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> useExpensive = <span class="hljs-function">(<span class="hljs-params">a, b</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> result = useMemo(<span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">return</span> a.reduce(<span class="hljs-function">(<span class="hljs-params">sum, val</span>) =&gt;</span> sum * b + val, <span class="hljs-number">0</span>);
+  }, [a, b]);
+
+  <span class="hljs-keyword">return</span> result;
+};
+
+<span class="hljs-keyword">let</span> a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];
+useExpensive(a, <span class="hljs-number">2</span>);
+<span class="hljs-comment">// =&gt; 12 (not in cache)</span>
+useExpensive(a, <span class="hljs-number">2</span>);
+<span class="hljs-comment">// =&gt; 12 (in cache)</span>
+a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>];
+useExpensive(a, <span class="hljs-number">2</span>);
+<span class="hljs-comment">// =&gt; 20 (not in cache)</span></code></pre>
+<p>As you can see the <code>useMemo</code> function re-runs the expensive function when any of its dependencies (<code>a</code> and <code>b</code> in this case) changes. Another special thing about React’s <code>useMemo</code> is the fact that it memoizes the function result per component instance that uses it, i.e. the following code runs the ”expensive calculation” twice even though the parameters are the same and they get the same result:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> Comp = <span class="hljs-function">(<span class="hljs-params">{ a, b }</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> result = useExpensive(a, b);
+  <span class="hljs-keyword">return</span> <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>One: {result}<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>;
+};
+
+<span class="hljs-keyword">const</span> a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];
+<span class="hljs-keyword">const</span> App = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">return</span> (
+    <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">Comp</span> <span class="hljs-attr">a</span>=<span class="hljs-string">{a}</span> <span class="hljs-attr">b</span>=<span class="hljs-string">{2}</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">Comp</span> <span class="hljs-attr">a</span>=<span class="hljs-string">{a}</span> <span class="hljs-attr">b</span>=<span class="hljs-string">{2}</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+  );
+};</code></pre>
+<p>The same is also true if two different components uses the same hook.</p>
+<p>Enough about the existing <code>useMemo</code> and let’s write some code to built it ourselves!</p>
+<h2 id="lets-make-our-own-memoization-hook">Let’s make our own memoization hook</h2>
+<p>The key part of memoization is to know when to discard an old value and re-run the memoized function. To do that we have to check if any of the specified dependencies have changed, which can be done using the following naive approach:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">let</span> lastDeps = <span class="hljs-literal">null</span>;
+<span class="hljs-keyword">let</span> lastValue;
+
+<span class="hljs-keyword">const</span> useMemo = <span class="hljs-function">(<span class="hljs-params">func, deps = []</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (lastDeps === <span class="hljs-literal">null</span> || deps.some(<span class="hljs-function">(<span class="hljs-params">dep, i</span>) =&gt;</span> dep !== lastDeps[i])) {
+    lastDeps = deps;
+    <span class="hljs-keyword">return</span> (lastValue = func());
+  }
+  <span class="hljs-keyword">return</span> lastValue;
+};</code></pre>
+<p>I said “naive” because this implementation has a big drawback - it can’t be reused! E.g:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> a = <span class="hljs-number">4</span>;
+useMemo(<span class="hljs-function">() =&gt;</span> a ** <span class="hljs-number">2</span>, [a]); <span class="hljs-comment">// =&gt; 16</span>
+useMemo(<span class="hljs-function">() =&gt;</span> a * <span class="hljs-number">2</span>, [a]); <span class="hljs-comment">// =&gt; 16, because the dependencies hasn&#x27;t changed, but our function has...</span></code></pre>
+<p>We therefore have to track the function somehow. A simple solution would be to add the function as a dependency and compare it as well:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">let</span> lastDeps = <span class="hljs-literal">null</span>;
+<span class="hljs-keyword">let</span> lastValue;
+
+<span class="hljs-keyword">const</span> useMemo = <span class="hljs-function">(<span class="hljs-params">func, deps = []</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> newDeps = [func, ...deps];
+  <span class="hljs-keyword">if</span> (lastDeps === <span class="hljs-literal">null</span> || newDeps.some(<span class="hljs-function">(<span class="hljs-params">dep, i</span>) =&gt;</span> dep !== lastDeps[i])) {
+    lastDeps = newDeps;
+    <span class="hljs-keyword">return</span> (lastValue = func());
+  }
+  <span class="hljs-keyword">return</span> lastValue;
+};</code></pre>
+<p>That will solve our previous issue, but will cause another... Using this implementation of <code>useMemo</code> inside a component will trigger a re-run of the function on every render, for instance a component such as:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> Comp = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">const</span> result = useMemo(<span class="hljs-function">() =&gt;</span> <span class="hljs-number">1000</span> ** <span class="hljs-number">5</span>, []);
+  <span class="hljs-keyword">return</span> <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>{result}<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>;
+};</code></pre>
+<p>Every time <code>Comp</code> is rendered the <code>() =&gt; 1000 ** 5</code> function is recreated, which means it will never make our comparison with <code>newDeps</code> be true and the function will be re-run all the time.</p>
+<h3 id="tracking-the-memoized-function">Tracking the memoized function</h3>
+<p>To solve this we need a way to see if a function is unchanged without relying on its reference, as the reference is changed on every render. One approach would be to convert the function to a string and see if the string has changed, but I’m afraid that will only work in simple scenarios. Consider the following:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// in Component.js:</span>
+<span class="hljs-keyword">const</span> doSomething = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-number">1000</span> ** <span class="hljs-number">5</span>;
+};
+
+<span class="hljs-keyword">const</span> result = useMemo(<span class="hljs-function">() =&gt;</span> doSomething(), []); <span class="hljs-comment">// (1)</span>
+
+<span class="hljs-comment">// in OtherComponent.js:</span>
+<span class="hljs-keyword">const</span> doSomething = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-number">1000</span> + <span class="hljs-number">5</span>;
+};
+
+<span class="hljs-keyword">const</span> result = useMemo(<span class="hljs-function">() =&gt;</span> doSomething(), []); <span class="hljs-comment">// (2)</span></code></pre>
+<p>As you can see in the snippet above the statements <strong>(1)</strong> and <strong>(2)</strong> looks the same and would be the same if we cast the memoized functions to strings, even though <code>doSomething</code> is different in the two files. So we need something else that we can use as a stable reference to our memoized functions, even when they are recreated on every render.</p>
+<p>React has solved this by tracking the order of called hooks per component instance, which is exactly why there are <a href="https://reactjs.org/docs/hooks-rules.html">Rules of Hooks</a>, because if that order would change the results would be mixed and unexpected. The solution I&#39;ve come up with is different and thanks to that will have some less strict rules as you’ll see.</p>
+<p>My solution is based on the fact that there is one thing that’s always constant for each invocation of <code>useMemo</code> in your code - its call site, i.e. the place in the code like the file, line and column number from where the function is called. So how can we get that information without any extra tooling? (<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/caller"><code>function.caller</code></a>is deprecated and doesn’t work anymore)</p>
+<p>A simple trick to get a function’s call site is to get hold of a stack trace and get the information from there (see potential caveats of this approach in the bottom of the post).</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> getCallSite = <span class="hljs-function">(<span class="hljs-params">depth</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> { stack } = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getting call site&quot;</span>);
+  <span class="hljs-keyword">return</span> stack.split(<span class="hljs-string">&quot;\n&quot;</span>)[depth];
+};
+
+<span class="hljs-keyword">const</span> A = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(getCallSite(<span class="hljs-number">2</span>));
+};
+<span class="hljs-keyword">const</span> B = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(getCallSite(<span class="hljs-number">2</span>));
+};
+
+A();
+<span class="hljs-comment">// at A (.../index.js:7:15)</span>
+B();
+<span class="hljs-comment">// at B (.../index.js:10:15)</span></code></pre>
+<p>I’m passing a <code>depth</code> of <code>2</code> because the first line of a stack trace (index = 0) is usally the error message (“getting call site&quot; in this case), the second line (index = 1) is the actual <code>getCallSite</code> function and in this case the third line (index = 2) is our functions <code>A</code> and <code>B</code> .</p>
+<p>Let’s use this new <code>getCallSite</code> function to improve the <code>useMemo</code> implementation. You&#39;ll notice in the code that I&#39;ve increased the depth to <code>3</code> because here the third line of the stack trace (index = 2) corresponds to our <code>useMemo</code> function and we care for from where it was called and not declared so we have to check the next line of the stack trace:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> lastDeps = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Map</span>();
+<span class="hljs-keyword">const</span> lastValue = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Map</span>();
+
+<span class="hljs-keyword">const</span> getCallSite = <span class="hljs-function">(<span class="hljs-params">depth</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> { stack } = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getting call site&quot;</span>);
+  <span class="hljs-keyword">return</span> stack.split(<span class="hljs-string">&quot;\n&quot;</span>)[depth];
+};
+
+<span class="hljs-keyword">const</span> useMemo = <span class="hljs-function">(<span class="hljs-params">func, deps</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> callSite = getCallSite(<span class="hljs-number">3</span>);
+  <span class="hljs-keyword">if</span> (!lastDeps.has(callSite) || lastDeps.get(callSite).some(<span class="hljs-function">(<span class="hljs-params">dep, i</span>) =&gt;</span> dep !== deps[i])) {
+    lastDeps.set(callSite, deps);
+    <span class="hljs-keyword">const</span> value = func();
+    lastValue.set(callSite, value);
+    <span class="hljs-keyword">return</span> value;
+  }
+  <span class="hljs-keyword">return</span> lastValue.get(callSite);
+};</code></pre>
+<p>One could think that we would be done here, but this version still has some issues. The problem is that the cache only stores one value per call site, which means that a scenario like the following will never re-use anything from the cache:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> Child = <span class="hljs-function">(<span class="hljs-params">{ val }</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> result = useMemo(<span class="hljs-function">() =&gt;</span> val ** <span class="hljs-number">5</span>, [val]);
+  <span class="hljs-keyword">return</span> <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>{result}<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>;
+};
+
+<span class="hljs-keyword">const</span> Parent = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">return</span> (
+    <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">Child</span> <span class="hljs-attr">val</span>=<span class="hljs-string">{1}</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">Child</span> <span class="hljs-attr">val</span>=<span class="hljs-string">{2}</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+  );
+};</code></pre>
+<p>On first render when <code>&lt;Child val={1} /&gt;</code> is rendered there&#39;s nothing in the cache so the memoized function will be run and when <code>&lt;Child val={2} /&gt;</code> is rendered there&#39;s nothing in the cache for <code>val=2</code> so the memoized function will be run again. On the next render when <code>&lt;Child val={1} /&gt;</code> is rendered again there is nothing in the cache for <code>val=1</code> so the memoized function is re-run, and so on…</p>
+<h3 id="caching-multiple-values">Caching multiple values</h3>
+<p>To remedy this issue we’ll have to store multiple values per call site. Instead of using only the call site as the key for <code>lastValue</code> we&#39;ll generate a key from both the call site and the current dependencies.</p>
+<p>How do we generate a good lookup key out of an array of dependencies? Would <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify">JSON.stringify()</a> do? No, it can&#39;t handle functions or circular data structures for instance. But by using its <code>replacer</code> option and a neat use of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap">WeakMap</a> we get a memory efficient key generator:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">let</span> keys = <span class="hljs-keyword">new</span> <span class="hljs-built_in">WeakMap</span>();
+<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>;
+<span class="hljs-keyword">const</span> getKeySet = <span class="hljs-function">(<span class="hljs-params">arr</span>) =&gt;</span>
+  <span class="hljs-built_in">JSON</span>.stringify(arr, <span class="hljs-function">(<span class="hljs-params">_, val</span>) =&gt;</span> {
+    <span class="hljs-comment">// val !== arr -- because we ignore the dependency array itself</span>
+    <span class="hljs-comment">// typeof val === &quot;object&quot; -- because only objects can be used as keys in a WeakMap</span>
+    <span class="hljs-comment">// val !== null -- because typeof null === &quot;object&quot; :P</span>
+    <span class="hljs-keyword">if</span> (val !== arr &amp;&amp; <span class="hljs-keyword">typeof</span> val === <span class="hljs-string">&quot;object&quot;</span> &amp;&amp; val !== <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">if</span> (!keys.has(val)) {
+        keys.set(val, <span class="hljs-string">`$$obj<span class="hljs-subst">${i++}</span>`</span>);
+      }
+      <span class="hljs-keyword">return</span> keys.get(val);
+    }
+    <span class="hljs-keyword">return</span> val;
+  });
+
+<span class="hljs-comment">// Example usage:</span>
+<span class="hljs-keyword">const</span> a = {};
+<span class="hljs-keyword">const</span> b = {};
+getKeySet([a, <span class="hljs-number">10</span>]); <span class="hljs-comment">// [&quot;$$obj0&quot;, 10]</span>
+getKeySet([b, <span class="hljs-number">10</span>]); <span class="hljs-comment">// [&quot;$$obj1&quot;, 10]</span>
+getKeySet([<span class="hljs-literal">true</span>, b, a]); <span class="hljs-comment">// [true, &quot;$$obj1&quot;, &quot;$$obj0&quot;]</span></code></pre>
+<p>Let’s use this key generator in our <code>useMemo</code> implementation:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> values = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Map</span>();
+<span class="hljs-keyword">const</span> keys = <span class="hljs-keyword">new</span> <span class="hljs-built_in">WeakMap</span>();
+<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>;
+<span class="hljs-keyword">const</span> getKeySet = <span class="hljs-function">(<span class="hljs-params">arr = []</span>) =&gt;</span>
+  <span class="hljs-built_in">JSON</span>.stringify(arr, <span class="hljs-function">(<span class="hljs-params">_, val</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (val !== arr &amp;&amp; <span class="hljs-keyword">typeof</span> val === <span class="hljs-string">&quot;object&quot;</span> &amp;&amp; val) {
+      <span class="hljs-keyword">if</span> (!keys.has(val)) {
+        keys.set(val, <span class="hljs-string">`$$obj<span class="hljs-subst">${i++}</span>`</span>);
+      }
+      <span class="hljs-keyword">return</span> keys.get(val);
+    }
+    <span class="hljs-keyword">return</span> val;
+  });
+<span class="hljs-keyword">const</span> getCallSite = <span class="hljs-function">(<span class="hljs-params">depth</span>) =&gt;</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getting call site&quot;</span>).stack.split(<span class="hljs-string">&quot;\n&quot;</span>)[depth];
+<span class="hljs-keyword">const</span> useMemo = <span class="hljs-function">(<span class="hljs-params">func, deps</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> key = <span class="hljs-string">`<span class="hljs-subst">${getCallSite(<span class="hljs-number">3</span>)}</span>|<span class="hljs-subst">${getKeySet(deps)}</span>`</span>;
+  <span class="hljs-keyword">if</span> (!values.has(key)) {
+    values.set(key, func());
+  }
+  <span class="hljs-keyword">return</span> values.get(key);
+};</code></pre>
+<p><strong>That’s it, our own <code>useMemo</code> hook is complete!</strong> I made the <code>getCallSite</code> function a one-liner to land on a total of exactly 20 lines of code as I promised (alright 21 after <a href="https://prettier.io">Prettier</a> has done its deal).</p>
+<h2 id="pros-and-cons-over-reacts-usememo">Pros and cons over React’s useMemo</h2>
+<p>One downside of this solution is that it can be expensive performance-wise to generate a stack trace, although under normal circumstances it should take less than a millisecond. Another thing about getting the call site is that the stack trace format is not standardized, even though most browsers have a similar format, so our <code>getCallSite</code> function can either crash, in case <code>error.stack</code> is not a string, or give the wrong result (see <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack">Error.prototype.stack</a> for more info).</p>
+<p>Another caveat is that cached values are never cleared, so unused values for key sets that don’t even exist anymore because of garbage collected objects will still be stored in memory. Switching the <code>const values = new Map()</code> to a Least Recently Used Cache (e.g. <a href="https://www.npmjs.com/package/lru-cache">lru-cache</a> ) would solve this in a configurable manner.</p>
+<p>There is also a potential issue if a dependency is a string with a value colliding with an existing <code>$$objN</code> key, a fix for that would be to replace the outer <code>JSON.stringify</code> with an ordinary <code>Array.map</code> and only stringify the non-objects like so:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">const</span> getKeySet = <span class="hljs-function">(<span class="hljs-params">arr = []</span>) =&gt;</span>
+  arr
+    .map(<span class="hljs-function">(<span class="hljs-params">val</span>) =&gt;</span> {
+      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> val === <span class="hljs-string">&quot;object&quot;</span> &amp;&amp; val) {
+        <span class="hljs-keyword">if</span> (!keys.has(val)) {
+          keys.set(val, <span class="hljs-string">`$$obj<span class="hljs-subst">${i++}</span>`</span>);
+        }
+        <span class="hljs-keyword">return</span> keys.get(val);
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.stringify(val);
+    })
+    .join(<span class="hljs-string">&quot;,&quot;</span>);</code></pre>
+<p>On the plus side, as I mentioned earlier, this solution doesn’t have the same strict rules as React’s hooks has, for instance this <code>useMemo</code> can be used both <em>outside components and conditionally</em>, thanks to the fact that the call site is constant even for conditional calls.</p>
+<p>Another advantage is that memoized values will be shared across component instances as long as they have the same dependencies.</p>
+<h2 id="final-words">Final words</h2>
+<p>I hope you enjoyed this journey of writing a <code>useMemo</code> hook from scratch, I know I did! You should know that the hook has not been battle tested in a real app so there could be other issues with it apart from the small downsides in the previous section.</p>
+<p>If you have any questions, suggestions or anything else don’t hesitate to reach out!</p>
+<p><strong>Until next time!</strong> / <a href="https://twitter.com/joakimbeng">@joakimbeng</a></p>
+</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="https://twitter.com/share?text=A memoizer like React&#39;s useMemo in 20 lines&amp;url=https://joakim.beng.se/blog/posts/a-memoizer-like-reacts-usememo-in-20-lines.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://joakim.beng.se/blog/posts/a-memoizer-like-reacts-usememo-in-20-lines.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/a-memoizer-like-reacts-usememo-in-20-lines.html';var disqus_url = 'https://joakim.beng.se/blog/posts/a-memoizer-like-reacts-usememo-in-20-lines.html';var disqus_title = 'A memoizer like React&#39;s useMemo in 20 lines - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="https://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="https://github.com/joakimbeng/jiffy">jiffy</a> with a <a href="https://ghost.org"><i class="icon-ghost"></i> Ghost</a> theme</section></div></footer></body></html>

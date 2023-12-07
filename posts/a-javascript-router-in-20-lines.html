@@ -1,146 +1,138 @@
-<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>A JavaScript router in 20 lines - joakimbeng</title><meta name="description" content="Let's code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><!-- <link href="../assets/css/main.css" rel="stylesheet"> --></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2013-12-15">15 Dec 2013</time>&nbsp;on <a class="tag" href="../tags/javascript.html">JavaScript</a>, <a class="tag" href="../tags/objectobserve.html">Object.observe</a></span><h1 class="post-title">A JavaScript router in 20 lines</h1><section class="post-content"><p>Last week I found this post about <a href="http://krasimirtsonev.com/blog/article/Javascript-template-engine-in-just-20-line">writing a template engine in 20 lines</a>, which in turn is inspired by <a href="http://ejohn.org/blog/javascript-micro-templating/">John Resig&#39;s post on the same topic</a>. I find them really simple, interesting and inspiring so I came up with the idea of making a <em>simple client side router in just 20 lines of code</em>.</p>
-<h2 id="let-s-build-a-router">Let&#39;s build a router</h2>
+<!DOCTYPE html><!--[if lt IE 7]>      <html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]--><!--[if IE 7]>         <html class="lt-ie9 lt-ie8"> <![endif]--><!--[if IE 8]>         <html class="lt-ie9"> <![endif]--><!--[if gt IE 8]><!--> <html><!--<![endif]--><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>A JavaScript router in 20 lines - joakimbeng</title><meta name="description" content="Let&#39;s code a better tomorrow..."><meta name="HandheldFriendly" content="True"><meta name="MobileOptimized" content="320"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="../assets/css/screen.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Open+Sans:700,400|Source+Code+Pro:400"><link href="../assets/css/tomorrow-night-eighties.min.css" rel="stylesheet"><link rel="alternate" type="application/rss+xml" href="https://joakim.beng.se/blog/rss.xml"><script async src="https://www.googletagmanager.com/gtag/js?id=UA-5147086-5"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-5147086-5');</script></head><body class="post-template"><main class="content"><article class="post"><header class="post-header"><a id="blog-logo" href="../"><h1 class="blog-title">joakimbeng</h1></a></header><span class="post-meta"><time datetime="2013-12-15">15 Dec 2013</time>&nbsp;on <a class="tag" href="../tags/javascript.html">JavaScript</a>, <a class="tag" href="../tags/objectobserve.html">Object.observe</a>, <a class="tag" href="../tags/20-liners.html">20-liners</a></span><h1 class="post-title">A JavaScript router in 20 lines</h1><section class="post-content"><p>Last week I found this post about <a href="http://krasimirtsonev.com/blog/article/Javascript-template-engine-in-just-20-line">writing a template engine in 20 lines</a>, which in turn is inspired by <a href="http://ejohn.org/blog/javascript-micro-templating/">John Resig&#39;s post on the same topic</a>. I find them really simple, interesting and inspiring so I came up with the idea of making a <em>simple client side router in just 20 lines of code</em>.</p>
+<h2 id="lets-build-a-router">Let&#39;s build a router</h2>
 <p>First we&#39;ll need a html template:</p>
-<pre><code class="lang-html"><span class="doctype">&lt;!DOCTYPE html&gt;</span>
-<span class="tag">&lt;<span class="title">html</span>&gt;</span>
-<span class="tag">&lt;<span class="title">head</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">title</span>&gt;</span>Building a router<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">
-    <span class="comment">// Put John's template engine code here...</span>
-  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
-<span class="tag">&lt;<span class="title">body</span>&gt;</span>
+<pre><code class="language-html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;utf-8&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Building a router<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+    <span class="hljs-comment">// Put John&#x27;s template engine code here...</span>
+  </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
 
-<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
-<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
-</code></pre>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span></code></pre>
 <p>For the templates I&#39;ll use <code>&lt;script&gt;</code> tags with <code>type=&quot;text/html&quot;</code>, which will make the browser not parse the contents of them, like we want it. I place them right after the existing script tag.</p>
-<pre><code class="lang-html"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/html"</span> <span class="attribute">id</span>=<span class="value">"home"</span>&gt;</span><span class="javascript">
-  &lt;h1&gt;Router FTW!<span class="xml"><span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
-</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
-<span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/html"</span> <span class="attribute">id</span>=<span class="value">"template1"</span>&gt;</span><span class="javascript">
-  &lt;h1&gt;Page <span class="number">1</span>: <span class="xml"><span class="vbscript">&lt;%= greeting %&gt;</span><span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="vbscript">&lt;%= moreText %&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span>
-</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
-<span class="tag">&lt;<span class="title">script</span> <span class="attribute">type</span>=<span class="value">"text/html"</span> <span class="attribute">id</span>=<span class="value">"template2"</span>&gt;</span><span class="javascript">
-  &lt;h1&gt;Page <span class="number">2</span>: <span class="xml"><span class="vbscript">&lt;%= heading %&gt;</span><span class="tag">&lt;/<span class="title">h1</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">p</span>&gt;</span>Lorem ipsum...<span class="tag">&lt;/<span class="title">p</span>&gt;</span>
-</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
-</code></pre>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;text/html&quot;</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;home&quot;</span>&gt;</span><span class="handlebars"><span class="xml">
+  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Router FTW!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;text/html&quot;</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;template1&quot;</span>&gt;</span><span class="handlebars"><span class="xml">
+  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Page 1: &lt;%= greeting %&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>&lt;%= moreText %&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;text/html&quot;</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;template2&quot;</span>&gt;</span><span class="handlebars"><span class="xml">
+  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Page 2: &lt;%= heading %&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Lorem ipsum...<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span></code></pre>
 <p>As you can see they are really basic, that&#39;s because we are focusing on the router part...</p>
-<h3 id="hash-url-s">Hash URL&#39;s</h3>
-<p>For this router I&#39;ll use hash URL&#39;s, i.e. those specified after the <code>#</code> sign in the full URL e.g. <a href="http://example.com/#**/our/url/here**">http://example.com/#**/our/url/here**</a>. I could have done it with the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history">HTML5 History API</a> but I&#39;ll leave that for another time.</p>
+<h3 id="hash-urls">Hash URL&#39;s</h3>
+<p>For this router I&#39;ll use hash URL&#39;s, i.e. those specified after the <code>#</code> sign in the full URL e.g. <a href="http://example.com/#**/our/url/here">http://example.com/#**/our/url/here</a>**. I could have done it with the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history">HTML5 History API</a> but I&#39;ll leave that for another time.</p>
 <h3 id="handling-route-changes">Handling route changes</h3>
 <p>The router will use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window.onhashchange">onhashchange event</a> to handle route changes after page load and the usual <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window.onload">onload event</a> to handle any route in the url on page load.</p>
-<h3 id="first-take-">First take...</h3>
+<h3 id="first-take">First take...</h3>
 <p>Let&#39;s begin with making the route registering function:</p>
-<pre><code class="lang-javascript"><span class="comment">// A hash to store our routes:</span>
-<span class="keyword">var</span> routes = {};
-<span class="comment">// The route registering function:</span>
-<span class="function"><span class="keyword">function</span> <span class="title">route</span> <span class="params">(path, templateId, controller)</span> {</span>
-  routes[path] = {templateId: templateId, controller: controller};
-}
-</code></pre>
+<pre><code class="language-javascript"><span class="hljs-comment">// A hash to store our routes:</span>
+<span class="hljs-keyword">var</span> routes = {};
+<span class="hljs-comment">// The route registering function:</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">route</span> (<span class="hljs-params">path, templateId, controller</span>) </span>{
+  routes[path] = {<span class="hljs-attr">templateId</span>: templateId, <span class="hljs-attr">controller</span>: controller};
+}</code></pre>
 <h4 id="registering-routes">Registering routes</h4>
 <p>Now we can create new routes yay! <em>Notice that I&#39;m mimicing the controller definition from AngularJS</em>:</p>
-<pre><code class="lang-javascript">route(<span class="string">'/'</span>, <span class="string">'home'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>});
-route(<span class="string">'/page1'</span>, <span class="string">'template1'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-    <span class="keyword">this</span>.greeting = <span class="string">'Hello world!'</span>;
-    <span class="keyword">this</span>.moreText = <span class="string">'Bacon ipsum...'</span>;
+<pre><code class="language-javascript">route(<span class="hljs-string">&#x27;/&#x27;</span>, <span class="hljs-string">&#x27;home&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{});
+route(<span class="hljs-string">&#x27;/page1&#x27;</span>, <span class="hljs-string">&#x27;template1&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-built_in">this</span>.greeting = <span class="hljs-string">&#x27;Hello world!&#x27;</span>;
+    <span class="hljs-built_in">this</span>.moreText = <span class="hljs-string">&#x27;Bacon ipsum...&#x27;</span>;
 });
-route(<span class="string">'/page2'</span>, <span class="string">'template2'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-    <span class="keyword">this</span>.heading = <span class="string">'I\'m page two!'</span>;
-});
-</code></pre>
+route(<span class="hljs-string">&#x27;/page2&#x27;</span>, <span class="hljs-string">&#x27;template2&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-built_in">this</span>.heading = <span class="hljs-string">&#x27;I\&#x27;m page two!&#x27;</span>;
+});</code></pre>
 <p>But yet nothing happens, because we don&#39;t handle the routes yet...</p>
 <h4 id="the-actual-route-handler">The actual route handler</h4>
 <p>Let&#39;s build the route handler! But first we need somewhere to render our pages, for now I settle with the convention that an element with id <code>view</code> is used as the container to render a page in.</p>
-<pre><code class="lang-javascript"><span class="keyword">var</span> el = <span class="literal">null</span>;
-<span class="function"><span class="keyword">function</span> <span class="title">router</span> <span class="params">()</span> {</span>
-    <span class="comment">// Lazy load view element:</span>
-    el = el || document.getElementById(<span class="string">'view'</span>);
-    <span class="comment">// Current route url (getting rid of '#' in hash as well):</span>
-    <span class="keyword">var</span> url = location.hash.slice(<span class="number">1</span>) || <span class="string">'/'</span>;
-    <span class="comment">// Get route by url:</span>
-    <span class="keyword">var</span> route = routes[url];
-    <span class="comment">// Do we have both a view and a route?</span>
-    <span class="keyword">if</span> (el &amp;&amp; route.controller) {
-        <span class="comment">// Render route template with John Resig's template engine:</span>
-        el.innerHTML = tmpl(route.templateId, <span class="keyword">new</span> route.controller());
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> el = <span class="hljs-literal">null</span>;
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">router</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-comment">// Lazy load view element:</span>
+    el = el || <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&#x27;view&#x27;</span>);
+    <span class="hljs-comment">// Current route url (getting rid of &#x27;#&#x27; in hash as well):</span>
+    <span class="hljs-keyword">var</span> url = location.hash.slice(<span class="hljs-number">1</span>) || <span class="hljs-string">&#x27;/&#x27;</span>;
+    <span class="hljs-comment">// Get route by url:</span>
+    <span class="hljs-keyword">var</span> route = routes[url];
+    <span class="hljs-comment">// Do we have both a view and a route?</span>
+    <span class="hljs-keyword">if</span> (el &amp;&amp; route.controller) {
+        <span class="hljs-comment">// Render route template with John Resig&#x27;s template engine:</span>
+        el.innerHTML = tmpl(route.templateId, <span class="hljs-keyword">new</span> route.controller());
     }
 }
-<span class="comment">// Listen on hash change:</span>
-window.addEventListener(<span class="string">'hashchange'</span>, router);
-<span class="comment">// Listen on page load:</span>
-window.addEventListener(<span class="string">'load'</span>, router);
-</code></pre>
+<span class="hljs-comment">// Listen on hash change:</span>
+<span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">&#x27;hashchange&#x27;</span>, router);
+<span class="hljs-comment">// Listen on page load:</span>
+<span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">&#x27;load&#x27;</span>, router);</code></pre>
 <p>There we have it! So let&#39;s test it!</p>
 <h3 id="testing-the-first-version">Testing the first version</h3>
 <p>First we&#39;ll add some navigational links to our layout, to be able to trigger the different routes, and the view element, by putting this inside our body element:</p>
-<pre><code class="lang-html">  <span class="tag">&lt;<span class="title">ul</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span> <span class="attribute">href</span>=<span class="value">"#"</span>&gt;</span>Home<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span> <span class="attribute">href</span>=<span class="value">"#/page1"</span>&gt;</span>Page 1<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span>
-    <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span> <span class="attribute">href</span>=<span class="value">"#/page2"</span>&gt;</span>Page 2<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span>
-  <span class="tag">&lt;/<span class="title">ul</span>&gt;</span>
-  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"view"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span>
-</code></pre>
+<pre><code class="language-html">  <span class="hljs-tag">&lt;<span class="hljs-name">ul</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span>&gt;</span>Home<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#/page1&quot;</span>&gt;</span>Page 1<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#/page2&quot;</span>&gt;</span>Page 2<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;view&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
 <p><a href="https://gist.github.com/joakimbeng/7918297/278619bd5ba9b4768eecb0020b09a43f2e8eacea">The complete first version can be found here</a>.</p>
 <p>Save and open your complete html file in a modern browser and you should see:</p>
 <blockquote>
 <p>Router FTW!</p>
 </blockquote>
 <p>And the navigational links should work as well. You can also try to go to a specific route directly by navigating your browser to e.g. &quot;path/to/your/router.html#/page1&quot; and you should see the contents of our &quot;page1&quot;.</p>
-<h3 id="bonus-one-directional-data-binding-">Bonus - one-directional data-binding!</h3>
+<h3 id="bonus---one-directional-data-binding">Bonus - one-directional data-binding!</h3>
 <p>To make the router a little more useful I&#39;m going to add one-directional data-binding for automatic updating of the view when data in the controllers change. For that I&#39;ll be using <a href="https://simpl.info/observe/"><code>Object.observe()</code></a> <em>(note: I didn&#39;t need Chrome Canary for the flag to exist, I could enable it in Chrome 32-beta as well)</em></p>
 <p>I will extend the router handling function to register an object observer which rerenders the current view, so no advanced partial view updates at this time.</p>
 <h4 id="router-with-object-observation">Router with object observation</h4>
 <p>With a small rewrite the new router look like this:</p>
-<pre><code class="lang-javascript"><span class="keyword">var</span> el = <span class="literal">null</span>, current = <span class="literal">null</span>;
-<span class="function"><span class="keyword">function</span> <span class="title">router</span> <span class="params">()</span> {</span>
-  <span class="comment">// Lazy load view element:</span>
-  el = el || document.getElementById(<span class="string">'view'</span>);
-  <span class="comment">// Clear existing observer:</span>
-  <span class="keyword">if</span> (current) {
-    Object.unobserve(current.controller, current.render);
-    current = <span class="literal">null</span>;
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> el = <span class="hljs-literal">null</span>, current = <span class="hljs-literal">null</span>;
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">router</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-comment">// Lazy load view element:</span>
+  el = el || <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&#x27;view&#x27;</span>);
+  <span class="hljs-comment">// Clear existing observer:</span>
+  <span class="hljs-keyword">if</span> (current) {
+    <span class="hljs-built_in">Object</span>.unobserve(current.controller, current.render);
+    current = <span class="hljs-literal">null</span>;
   }
-  <span class="comment">// Current route url (getting rid of '#' in hash as well):</span>
-  <span class="keyword">var</span> url = location.hash.slice(<span class="number">1</span>) || <span class="string">'/'</span>;
-  <span class="comment">// Get route by url:</span>
-  <span class="keyword">var</span> route = routes[url];
-  <span class="comment">// Do we have both a view and a route?</span>
-  <span class="keyword">if</span> (el &amp;&amp; route.controller) {
-    <span class="comment">// Set current route information:</span>
+  <span class="hljs-comment">// Current route url (getting rid of &#x27;#&#x27; in hash as well):</span>
+  <span class="hljs-keyword">var</span> url = location.hash.slice(<span class="hljs-number">1</span>) || <span class="hljs-string">&#x27;/&#x27;</span>;
+  <span class="hljs-comment">// Get route by url:</span>
+  <span class="hljs-keyword">var</span> route = routes[url];
+  <span class="hljs-comment">// Do we have both a view and a route?</span>
+  <span class="hljs-keyword">if</span> (el &amp;&amp; route.controller) {
+    <span class="hljs-comment">// Set current route information:</span>
     current = {
-      controller: <span class="keyword">new</span> route.controller,
-      template: tmpl(route.templateId),
-      render: <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-        <span class="comment">// Render route template with John Resig's template engine:</span>
-        el.innerHTML = <span class="keyword">this</span>.template(<span class="keyword">this</span>.controller);
+      <span class="hljs-attr">controller</span>: <span class="hljs-keyword">new</span> route.controller,
+      <span class="hljs-attr">template</span>: tmpl(route.templateId),
+      <span class="hljs-attr">render</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-comment">// Render route template with John Resig&#x27;s template engine:</span>
+        el.innerHTML = <span class="hljs-built_in">this</span>.template(<span class="hljs-built_in">this</span>.controller);
       }
     };
-    <span class="comment">// Render directly:</span>
+    <span class="hljs-comment">// Render directly:</span>
     current.render();
-    <span class="comment">// And observe for changes to trigger rerender:</span>
-    Object.observe(current.controller, current.render.bind(current));
+    <span class="hljs-comment">// And observe for changes to trigger rerender:</span>
+    <span class="hljs-built_in">Object</span>.observe(current.controller, current.render.bind(current));
   }
-}
-</code></pre>
+}</code></pre>
 <p><strong>That&#39;s it!</strong> As you can see, there&#39;s not that much extra code to get one-directional data-binding to work. I think the <code>Object.observe()</code> function is really great and can come in handy in many different scenarios in the future.</p>
 <h4 id="testing-the-data-binding">Testing the data-binding</h4>
 <p>To test the data-binding we&#39;ll just update one of the routes with a <code>setTimeout</code> to emulate a long running asynchronous function:</p>
-<pre><code class="lang-javascript">route(<span class="string">'/page1'</span>, <span class="string">'template1'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-  <span class="keyword">this</span>.greeting = <span class="string">'Hello world!'</span>;
-  <span class="keyword">this</span>.moreText = <span class="string">'Loading...'</span>;
-  setTimeout(<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-    <span class="keyword">this</span>.moreText = <span class="string">'Bacon ipsum...'</span>;
-  }.bind(<span class="keyword">this</span>), <span class="number">500</span>);
-});
-</code></pre>
+<pre><code class="language-javascript">route(<span class="hljs-string">&#x27;/page1&#x27;</span>, <span class="hljs-string">&#x27;template1&#x27;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-built_in">this</span>.greeting = <span class="hljs-string">&#x27;Hello world!&#x27;</span>;
+  <span class="hljs-built_in">this</span>.moreText = <span class="hljs-string">&#x27;Loading...&#x27;</span>;
+  <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-built_in">this</span>.moreText = <span class="hljs-string">&#x27;Bacon ipsum...&#x27;</span>;
+  }.bind(<span class="hljs-built_in">this</span>), <span class="hljs-number">500</span>);
+});</code></pre>
 <p>Then when you go to the route <code>#/page1</code> you should se &quot;Loading...&quot; for a short while which is then exchanged with &quot;Bacon ipsum...&quot;.</p>
 <h3 id="result">Result</h3>
 <p><a href="https://gist.github.com/joakimbeng/7918297">The full version with data-binding can be found here</a>. I admit that it isn&#39;t only 20 lines of code, it&#39;s 28 without the comments, so it wasn&#39;t that far off :)</p>
 <p>Even with data-binding this is still a really basic router though, for example parameter support is still missing, but this was made more as an experiment than a complete library anyway.</p>
 <p>Hopefully someone liked it, as I did when coding it ;)</p>
-</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="http://twitter.com/share?text=A JavaScript router in 20 lines&amp;url=http://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a><a class="icon-google-plus" href="https://plus.google.com/share?url=http://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;"><span class="hidden">Google+</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/a-javascript-router-in-20-lines.html';var disqus_url = 'http://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html';var disqus_title = 'A JavaScript router in 20 lines - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="http://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="http://github.com/joakimbeng/jiffy">jiffy</a> with a <a class="icon-ghost" href="http://ghost.org">Ghost</a> theme</section></div></footer><script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-5147086-5', 'auto');ga('send', 'pageview');</script></body></html>
+</section><footer class="post-footer"><div class="tags"><section class="author"><h4>Joakim Carlstein</h4><p></p></section><section class="share"><h4>Share this post</h4><a class="icon-twitter" href="https://twitter.com/share?text=A JavaScript router in 20 lines&amp;url=https://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;"><span class="hidden">Twitter</span></a><a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;"><span class="hidden">Facebook</span></a></section></div></footer><div><hr></div><div id="disqus_thread"></div><script type="text/javascript">var disqus_shortname = 'joakimbeng';var disqus_identifier = 'posts/a-javascript-router-in-20-lines.html';var disqus_url = 'https://joakim.beng.se/blog/posts/a-javascript-router-in-20-lines.html';var disqus_title = 'A JavaScript router in 20 lines - joakimbeng';(function() {var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></article></main><footer class="site-footer"><a class="subscribe icon-feed" href="https://joakim.beng.se/blog/rss.xml"><span class="tooltip">Subscribe!</span></a><div class="inner"><section class="copyright">All content copyright <a href="/">joakimbeng</a> © 2015 • All rights reserved.</section><section class="poweredby">Built in a <a href="https://github.com/joakimbeng/jiffy">jiffy</a> with a <a href="https://ghost.org"><i class="icon-ghost"></i> Ghost</a> theme</section></div></footer></body></html>
